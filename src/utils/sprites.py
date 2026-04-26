@@ -2,10 +2,17 @@
 import pygame
 
 class CharacterSprite:
-    def __init__(self, filepath):
-        self.sheet = pygame.image.load(filepath).convert_alpha()
-        self.frame_w = 64
-        self.frame_h = 64
+    def __init__(self, filepath, scale=1.0):
+        raw_sheet = pygame.image.load(filepath).convert_alpha()
+        w, h = raw_sheet.get_size()
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+        self.sheet = pygame.transform.scale(raw_sheet, (new_w, new_h))
+        
+        self.scale = scale
+        self.frame_w = int(64 * scale)
+        self.frame_h = int(64 * scale)
+        
         self.animations = {
             'up': self._extract_row(8, 9),
             'left': self._extract_row(9, 9),

@@ -1,3 +1,7 @@
+#pip install pathfinding
+#pip install pygame
+#pip install pytmx
+
 import pygame
 import sys
 from src.core.config import *
@@ -17,23 +21,34 @@ class Game:
         self.font_sm = pygame.font.SysFont("monospace", 20)
         
         try:
-            self.sprite_manager = CharacterSprite("assets/characters/zumbi-spritesheet.png")
+            self.sprite_player = CharacterSprite("assets/characters/player-spritesheet.png")
+            self.sprite_zumbi = CharacterSprite("assets/characters/zumbi-spritesheet.png")
         except FileNotFoundError:
-            print("Erro: Imagem 'assets/characters/zumbi-spritesheet.png' não encontrada.")
+            print("Erro: Imagem não encontrada.")
             sys.exit(1)
             
-        self.maze = Maze()
+        self.maze = Maze("assets/maps/mapteste/map.tmx", scale_factor=4)
         self.fog = FogOfWar()
         self.camera = pygame.Vector2(0, 0)
-        self.reset() # Inicializa as variáveis de estado
+        self.reset()
 
     def reset(self):
         self.game_over = False
         self.won = False
         self.time = 0.0
-        self.player = Player(1.5 * TILE, 1.5 * TILE, self.sprite_manager)
-        self.enemy = EnemyAI(22.5 * TILE, 18.5 * TILE, self.sprite_manager)
-        # Reseta a câmera imediatamente para o jogador
+        try:
+            spawn_point = self.maze.tmx_data.get_object_by_name("start")
+            spawn_x = spawn_point.x * self.maze.scale
+            spawn_y = spawn_point.y * self.maze.scale
+        except Exception:
+            spawn_x = 8.5 * self.maze.tile_size
+            spawn_y = 8.5 * self.maze.tile_size
+            
+        self.player = Player(spawn_x, spawn_y, self.sprite_player)
+        enemy_x = 15.5 * self.maze.tile_size
+        enemy_y = 10.5 * self.maze.tile_size
+        self.enemy = EnemyAI(enemy_x, enemy_y, self.sprite_zumbi)
+        
         sw, sh = self.screen.get_size()
         self.camera.x = self.player.x - sw / 2
         self.camera.y = self.player.y - sh / 2
@@ -49,16 +64,20 @@ class Game:
             if keys[pygame.K_s] or keys[pygame.K_DOWN]:  self.player.vy += self.player.speed
 
     def check_conditions(self):
-        px_grid, py_grid = int(self.player.x // TILE), int(self.player.y // TILE)
-        self.player.is_hidden = (MAZE_DATA[py_grid][px_grid] == 3)
+        px_grid = int(self.player.x // self.maze.tile_size)
+        py_grid = int(self.player.y // self.maze.tile_size)
+        tile_value = self.maze.get_tile_value(px_grid, py_grid)
+        
+        # Se for 3, é esconderijo
+        self.player.is_hidden = (tile_value == 3)
 
         # Condição de Derrota
         dist_to_enemy = ((self.player.x - self.enemy.x)**2 + (self.player.y - self.enemy.y)**2)**0.5
         if dist_to_enemy < 20:
             self.game_over = True
 
-        # Condição de Vitória
-        if self.maze.exit_rect and pygame.Rect(self.player.x-10, self.player.y-10, 20, 20).colliderect(self.maze.exit_rect):
+        # Condição de Vitória (Se o valor do chão for 2, é a saída)
+        if tile_value == 2:
             self.won = True
 
     def draw_ui_overlay(self, title, color, bg_color):
@@ -93,7 +112,7 @@ class Game:
             
             if not self.game_over and not self.won:
                 self.player.update(dt, self.maze.wall_rects)
-                self.enemy.update(dt, self.player, self.maze.wall_rects)
+                self.enemy.update(dt, self.player, self.maze)
                 self.check_conditions()
 
             sw, sh = self.screen.get_size()
@@ -109,10 +128,8 @@ class Game:
             entities.sort(key=lambda e: e.y)
             for e in entities:
                 e.draw(self.screen, self.camera)
-            
-            # Oculta a névoa na tela de vitória para o jogador ver o mapa que escapou
             if not self.won:
-                self.fog.draw(self.screen, self.player.x, self.player.y, self.camera, self.time)
+                self.fog.draw(self.screen, self.player.x, self.player.y, self.camera, self.time, self.maze)
 
             if self.game_over:
                 self.draw_ui_overlay("VOCÊ FOI PEGO!", (255, 50, 50), (60, 0, 0, 180))

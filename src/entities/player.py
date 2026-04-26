@@ -4,7 +4,7 @@ from .actor import Actor
 class Player(Actor):
     def __init__(self, x, y, sprite_manager):
         super().__init__(x, y, sprite_manager)
-        self.speed = 120
+        self.speed = 240
         self.is_hidden = False
 
     def update(self, dt, walls):
@@ -15,7 +15,7 @@ class Player(Actor):
         if self.vx > 0: self.direction = 'right'
         elif self.vx < 0: self.direction = 'left'
         elif self.vy > 0: self.direction = 'down'
-        elif self.vy < 0: self.direction = 'up'
+        elif self.vy < -0.5: self.direction = 'up'
 
         self.moving = self.vx != 0 or self.vy != 0
         if self.moving:
