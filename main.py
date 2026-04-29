@@ -8,8 +8,8 @@ from src.core.config import *
 from src.utils.sprites import CharacterSprite
 from src.world.maze import Maze
 from src.world.fog import FogOfWar
-from src.entities.player import Player
-from src.entities.enemy import EnemyAI
+from src.world.entities.player import Player
+from src.world.entities.enemy import EnemyAI
 
 class Game:
     def __init__(self):
