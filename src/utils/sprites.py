@@ -2,7 +2,7 @@
 import pygame
 
 class CharacterSprite:
-    def __init__(self, filepath, scale=1.0):
+    def __init__(self, filepath, scale=1.5):
         raw_sheet = pygame.image.load(filepath).convert_alpha()
         w, h = raw_sheet.get_size()
         new_w = int(w * scale)
