@@ -10,6 +10,7 @@ from src.world.maze import Maze
 from src.world.fog import FogOfWar
 from src.world.entities.player import Player
 from src.world.entities.enemy import EnemyAI
+from src.world.env_object import EnvObject
 
 class Game:
     def __init__(self):
@@ -28,6 +29,18 @@ class Game:
             sys.exit(1)
             
         self.maze = Maze("assets/maps/mapteste/map.tmx", scale_factor=4)
+        # Carrega frames de cada tipo de objeto animado do ambiente
+        torch_path = "assets/catacombs rogue fantasy/RF_Catacombs_v1.0/"
+        ts = self.maze.tile_size
+        self.env_frames = {
+            "torch": [
+                pygame.transform.scale(
+                    pygame.image.load(f"{torch_path}torch_{i}.png").convert_alpha(),
+                    (ts, ts)
+                )
+                for i in range(1, 5)
+            ]
+        }
         self.fog = FogOfWar()
         self.camera = pygame.Vector2(0, 0)
         self.reset()
@@ -52,6 +65,13 @@ class Game:
         sw, sh = self.screen.get_size()
         self.camera.x = self.player.x - sw / 2
         self.camera.y = self.player.y - sh / 2
+
+        # Instancia objetos de ambiente a partir dos dados do Object Layer
+        self.env_objects = []
+        for data in self.maze.env_object_data:
+            frames = self.env_frames.get(data["type"])
+            if frames:
+                self.env_objects.append(EnvObject(data["x"], data["y"], frames))
 
     def handle_input(self):
         keys = pygame.key.get_pressed()
@@ -113,6 +133,8 @@ class Game:
             if not self.game_over and not self.won:
                 self.player.update(dt, self.maze.wall_rects)
                 self.enemy.update(dt, self.player, self.maze)
+                for obj in self.env_objects:        # linha nova
+                    obj.update(dt)
                 self.check_conditions()
 
             sw, sh = self.screen.get_size()
@@ -124,9 +146,10 @@ class Game:
             self.screen.fill(C_BG)
             self.maze.draw(self.screen, self.camera, self.time)
             
-            entities = [self.player, self.enemy]
-            entities.sort(key=lambda e: e.y)
-            for e in entities:
+            # Entidades e objetos de ambiente ordenados por Y para depth sorting correto
+            drawables = [self.player, self.enemy] + self.env_objects
+            drawables.sort(key=lambda e: e.y)
+            for e in drawables:
                 e.draw(self.screen, self.camera)
             if not self.won:
                 self.fog.draw(self.screen, self.player.x, self.player.y, self.camera, self.time, self.maze)

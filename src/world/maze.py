@@ -22,12 +22,16 @@ class Maze:
         # Lista de retângulos das paredes — usada para detecção de colisão
         self.wall_rects = []
 
+
         # Matriz lógica do mapa: 0=chão, 1=parede, 2=saída, 3=esconderijo
         self.matrix = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
 
         # Superfície pré-renderizada do mapa — desenhada uma vez e reutilizada
         self.map_surface = pygame.Surface((self.map_w, self.map_h))
         self.map_surface.fill((4, 3, 10))  # Fundo com a cor C_BG do config
+
+        # Dados brutos dos objetos do mapa (tochas, itens, etc.) lidos do Object Layer
+        self.env_object_data = []
 
         # Constrói o mapa a partir dos dados do .tmx
         self._build_map()
@@ -63,6 +67,16 @@ class Maze:
                                 self.matrix[y][x] = 2   # Saída do labirinto
                             elif props.get("Tipo") == "hide":
                                 self.matrix[y][x] = 3   # Ponto de esconderijo
+
+        for layer in self.tmx_data.visible_layers:
+            if isinstance(layer, pytmx.TiledObjectGroup):
+                for obj in layer:
+                    self.env_object_data.append({
+                        "name": obj.name,
+                        "type": obj.type,
+                        "x": obj.x * self.scale,
+                        "y": obj.y * self.scale,
+                    })
 
     def get_tile_value(self, grid_x, grid_y):
         """Retorna o valor lógico de uma célula do grid (0, 1, 2 ou 3).
