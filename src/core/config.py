@@ -2,7 +2,7 @@
 import pygame
 
 # Resolução inicial da janela do jogo
-INIT_SCREEN_W, INIT_SCREEN_H = 800, 600
+INIT_SCREEN_W, INIT_SCREEN_H = 1366, 768
 
 # Limite de frames por segundo — controla a velocidade do loop principal
 FPS = 60

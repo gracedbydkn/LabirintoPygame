@@ -6,7 +6,7 @@ class Player(Actor):
         super().__init__(x, y, sprite_manager)
 
         # Velocidade de movimento em pixels por segundo
-        self.speed = 240
+        self.speed = 230
 
         # Flag que indica se o jogador está em um esconderijo (afeta detecção pelo inimigo)
         self.is_hidden = False
