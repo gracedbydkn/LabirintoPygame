@@ -30,6 +30,9 @@ class Maze:
         self.map_surface = pygame.Surface((self.map_w, self.map_h))
         self.map_surface.fill((4, 3, 10))  # Fundo com a cor C_BG do config
 
+        self.top_surface = pygame.Surface((self.map_w, self.map_h), pygame.SRCALPHA)
+        self.top_surface.fill((0, 0, 0, 0))
+
         # Dados brutos dos objetos do mapa (tochas, itens, etc.) lidos do Object Layer
         self.env_object_data = []
 
@@ -53,7 +56,10 @@ class Maze:
                         # Calcula a posição em pixels na superfície do mapa
                         px = x * self.tile_size
                         py = y * self.tile_size
-                        self.map_surface.blit(tile_img, (px, py))
+                        if layer_index == 2:
+                            self.top_surface.blit(tile_img, (px, py))
+                        else:
+                            self.map_surface.blit(tile_img, (px, py))
 
                         # Camada 1 é reservada para paredes (convenção do projeto)
                         if layer_index == 1:
@@ -89,3 +95,6 @@ class Maze:
         """Desenha a map_surface pré-renderizada na tela, aplicando o offset da câmera.
         Por ser pré-renderizada, essa operação é muito eficiente a cada frame."""
         surface.blit(self.map_surface, (-camera.x, -camera.y))
+
+    def draw_top(self, surface, camera):
+        surface.blit(self.top_surface, (-camera.x, -camera.y))

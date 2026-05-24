@@ -28,7 +28,7 @@ class Game:
             print("Erro: Imagem não encontrada.")
             sys.exit(1)
             
-        self.maze = Maze("assets/maps/level01/Nova pasta/map.tmx", scale_factor=4)
+        self.maze = Maze("assets/maps/level01/Teste/map.tmx", scale_factor=4)
         # Carrega frames de cada tipo de objeto animado do ambiente
         torch_path = "assets/catacombs rogue fantasy/RF_Catacombs_v1.0/"
         ts = self.maze.tile_size
@@ -42,7 +42,7 @@ class Game:
             ],
             "vaso": [
                 pygame.transform.scale(
-                    pygame.image.load(f"{torch_path}/vasos/vaso-frame-{i}.png").convert_alpha(),
+                    pygame.image.load(f"assets/itens/vaso-frame-{i}.png").convert_alpha(),
                     (ts, ts)
                 )
                 for i in range(0, 3)
@@ -158,6 +158,7 @@ class Game:
             drawables.sort(key=lambda e: e.y)
             for e in drawables:
                 e.draw(self.screen, self.camera)
+                self.maze.draw_top(self.screen, self.camera)
             if not self.won:
                 self.fog.draw(self.screen, self.player.x, self.player.y, self.camera, self.time, self.maze)
 
