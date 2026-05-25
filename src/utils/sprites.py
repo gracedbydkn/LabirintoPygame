@@ -29,3 +29,17 @@ class CharacterSprite:
             surf.blit(self.sheet, (0, 0), (x, y, self.frame_w, self.frame_h))
             frames.append(surf)
         return frames
+    
+def load_frames(pattern, count, size):
+    # Carrega uma sequência de frames a partir de um padrão de nome
+    # pattern: caminho com {} onde vai o índice  ex: "assets/itens/vaso-frame-{}.png"
+    # count:   número de frames
+    # size:    tupla (largura, altura) para escalar
+
+    return [
+        pygame.transform.scale(
+            pygame.image.load(pattern.format(i)).convert_alpha(),
+            size
+        )
+        for i in range(count)
+    ]
