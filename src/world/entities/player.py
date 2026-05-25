@@ -52,15 +52,16 @@ class Player(Actor):
         from .item import Item
         from .world_object import WorldObject
 
-        alvo = self._get_objeto_a_frente(world_objects, items)
-        if alvo is None:
+        # Para WorldObjects: exige estar olhando na direção (ex: quebrar vaso)
+        alvo_objeto = self._get_objeto_a_frente(world_objects, [])
+        if alvo_objeto and isinstance(alvo_objeto, WorldObject) and alvo_objeto.interactable:
+            alvo_objeto.interactable.interact(self)
             return
-        
-        if isinstance(alvo, Item):
-            alvo.collect(self)
 
-        elif isinstance(alvo, WorldObject) and alvo.interactable:
-            alvo.interactable.interact(self)
+        # Para Items: basta estar próximo (ex: pegar chave)
+        alvo_item = self._get_objeto_proximo([], items)
+        if alvo_item and isinstance(alvo_item, Item):
+            alvo_item.collect(self)
 
     def handle_input(self):
         keys = pygame.key.get_pressed()
