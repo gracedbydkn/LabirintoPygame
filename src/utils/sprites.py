@@ -14,6 +14,10 @@ class CharacterSprite:
         self.frame_h = int(64 * scale)
         
         self.animations = {
+            'idle_up': self._extract_row(22, 2),
+            'idle_left': self._extract_row(23, 2),
+            'idle_down': self._extract_row(24, 2),
+            'idle_right': self._extract_row(25, 2),
             'up': self._extract_row(8, 9),
             'left': self._extract_row(9, 9),
             'down': self._extract_row(10, 9),

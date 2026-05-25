@@ -21,7 +21,7 @@ class Player(Actor):
             'right': (self.interaction_range, 0),
             'left': (-self.interaction_range, 0),
             'down': (0, self.interaction_range),
-            'up': (0, self.interaction_range)
+            'up': (0, -self.interaction_range)
         }
         ox, oy = offsets[self.direction]
         px = self.x + ox
@@ -79,8 +79,7 @@ class Player(Actor):
         self.vy = direcao.y * self.speed
 
     def update(self, dt, walls):
-        """Atualiza posição, colisão, direção e animação do jogador a cada frame."""
-
+        """Atualiza posição, colisão, direção e animação do jogador a cada frame.""" 
         # Aplica a velocidade ao longo do tempo (vx/vy são definidos pelo input externo)
         self.x += self.vx * dt
         self.y += self.vy * dt
@@ -89,21 +88,18 @@ class Player(Actor):
         self._resolve_collision(walls)
 
         # Atualiza a direção visual com base na velocidade — prioridade: horizontal > vertical
-        if self.vx > 0:
-            self.direction = 'right'
-        elif self.vx < 0:
-            self.direction = 'left'
-        elif self.vy > 0:
-            self.direction = 'down'
-        elif self.vy < -0.5:        # Limiar pequeno para evitar flip acidental na vertical
+        if self.vx > 0: self.direction = 'right'
+        elif self.vx < 0: self.direction = 'left'
+        elif self.vy > 0: self.direction = 'down'
+        elif self.vy < -0.5: # Limiar pequeno para evitar flip acidental na vertical
             self.direction = 'up'
 
         # Determina se está em movimento para controlar qual animação exibir
         self.moving = self.vx != 0 or self.vy != 0
 
         if self.moving:
-            # Avança o frame da animação de caminhada proporcionalmente ao tempo
+            self.current_animation = self.direction          # 9 frames de caminhada
             self.frame_index = (self.frame_index + self.anim_speed * dt) % 9
         else:
-            # Sem movimento: reseta para o frame 0 (pose idle)
-            self.frame_index = 0
+            self.current_animation = f'idle_{self.direction}' # 2 frames de idle
+            self.frame_index = (self.frame_index + self.anim_speed_idle * dt) % 2

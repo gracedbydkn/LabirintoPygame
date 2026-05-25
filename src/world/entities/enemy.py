@@ -279,3 +279,5 @@ class EnemyAI(Actor):
             self.frame_index = (self.frame_index + self.anim_speed * dt) % 9
         else:
             self.frame_index = 0  # Frame parado (idle)
+
+        self.current_animation = self.direction

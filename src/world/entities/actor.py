@@ -15,12 +15,14 @@ class Actor:
 
         # Direção atual — controla qual animação exibir
         self.direction = 'down'
+        self.current_animation = 'idle_down'
 
         # Índice do frame atual da animação (float para suportar velocidade fracionada)
         self.frame_index = 0
 
         # Velocidade de avanço dos frames de animação (frames por segundo lógico)
         self.anim_speed = 10
+        self.anim_speed_idle = 2
 
         # Indica se o ator está em movimento (usado para alternar idle/walk)
         self.moving = False
@@ -62,9 +64,11 @@ class Actor:
         # Converte posição do mundo para posição na tela usando o offset da câmera
         sx = int(self.x - camera.x)
         sy = int(self.y - camera.y)
+        
 
         # Obtém o frame atual da animação conforme direção e índice
-        frame = self.sprites.animations[self.direction][int(self.frame_index)]
+        frames = self.sprites.animations[self.current_animation]
+        frame = self.sprites.animations[self.current_animation][int(self.frame_index) % len(frames)]
 
         fw = frame.get_width()
         fh = frame.get_height()
