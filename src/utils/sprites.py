@@ -47,3 +47,22 @@ def load_frames(pattern, count, size):
         )
         for i in range(count)
     ]
+
+def load_spritesheet_row(filepath, num_frames, frame_w, frame_h, scale_size=None):
+    """Extrai frames de uma única linha horizontal de um spritesheet.
+    
+    filepath:   caminho para o PNG
+    num_frames: número de frames na linha
+    frame_w:    largura de cada frame no spritesheet original
+    frame_h:    altura de cada frame no spritesheet original
+    scale_size: tupla (w, h) para redimensionar cada frame — opcional
+    """
+    sheet = pygame.image.load(filepath).convert_alpha()
+    frames = []
+    for i in range(num_frames):
+        surf = pygame.Surface((frame_w, frame_h), pygame.SRCALPHA)
+        surf.blit(sheet, (0, 0), (i * frame_w, 0, frame_w, frame_h))
+        if scale_size:
+            surf = pygame.transform.scale(surf, scale_size)
+        frames.append(surf)
+    return frames
