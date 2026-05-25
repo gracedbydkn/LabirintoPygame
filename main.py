@@ -5,7 +5,7 @@
 import pygame
 import sys
 from src.core.config import *
-from src.utils.sprites import CharacterSprite, load_frames
+from src.utils.sprites import CharacterSprite, load_frames, load_spritesheet_row
 from src.world.maze import Maze
 from src.world.fog import FogOfWar
 from src.world.entities.player import Player
@@ -36,12 +36,15 @@ class Game:
         ts = self.maze.tile_size
         vaso_size = (int(ts*1.7), int(ts*1.7))
         vaso_frames = load_frames("assets/itens/vaso-frame-{}.png", 4, vaso_size)
-        
+        chave_size = (int(ts * 0.8), int(ts * 0.8))
+        chave_frames = load_spritesheet_row("assets/itens/key_32x32_24f.png", 24, 32, 32, chave_size)
+
         self.env_frames = {
             "vaso": [vaso_frames[0]],
             "vaso_highlight": [vaso_frames[1]],
             "vaso_quebrado": [vaso_frames[3]],
             "torch": load_frames("assets/catacombs rogue fantasy/RF_Catacombs_v1.0/torch_{}.png", 4, (ts, ts)),
+            "chave": chave_frames,
         }
         self.fog = FogOfWar()
         self.camera = pygame.Vector2(0, 0)
@@ -80,7 +83,7 @@ class Game:
                 frames_h = self.env_frames.get("vaso_highlight")
                 frames_q = self.env_frames.get("vaso_quebrado")
                 if frames and frames_h and frames_q:
-                    self.world_objects.append(Vaso(data["x"], data["y"], frames, frames_h, frames_q))
+                    self.world_objects.append(Vaso(data["x"], data["y"], frames, frames_h, frames_q, loot_type="chave"))
             elif data["type"] == "chave":
                 frames = self.env_frames.get(data["type"])
                 if frames:
@@ -157,13 +160,13 @@ class Game:
 
                 self.world_objects = [o for o in self.world_objects if not o.dead]
                 self.items = [i for i in self.items if not i.dead]
-                
-                self.items.extend(self.items_para_spawnar)
+                self.items_para_spawnar.extend(self.player.items_para_spawnar)
+                self.player.items_para_spawnar.clear()
+
                 for spawn in self.items_para_spawnar:
-                    frame = self.env_frames.get(spawn["type"])
-                    if frame:
-                        from src.world.entities.item import Item
-                        self.items.append(Item(spawn["x"], spawn["y"], spawn["type"], frame[0]))
+                    frames = self.env_frames.get(spawn["type"])
+                    if frames:
+                        self.items.append(Item(spawn["x"], spawn["y"], spawn["type"], frames))
                 self.items_para_spawnar.clear()
 
                 self.check_conditions()

@@ -6,7 +6,7 @@ class Inventory:
         self.capacity = capacity
 
     def adicionar(self, item):
-        if len(self.items) < self.capacity:
+        if len(self._items) < self.capacity:
             self._items.append(item)
             return True
         return False
