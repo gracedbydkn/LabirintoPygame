@@ -153,7 +153,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <objectgroup id="4" name="Camada de Objetos" visible="0">
+ <objectgroup id="4" name="Camada de Objetos">
   <object id="1" name="vaso-frame-0.png" type="vaso" x="33.5" y="69.5"/>
   <object id="2" name="vaso-quebrado-frame-0.png" type="vaso" x="172.5" y="70.5"/>
   <object id="3" name="vaso-frame-0.png" x="33" y="126"/>

@@ -5,12 +5,15 @@
 import pygame
 import sys
 from src.core.config import *
-from src.utils.sprites import CharacterSprite
+from src.utils.sprites import CharacterSprite, load_frames
 from src.world.maze import Maze
 from src.world.fog import FogOfWar
 from src.world.entities.player import Player
 from src.world.entities.enemy import EnemyAI
 from src.world.env_object import EnvObject
+from src.world.entities.world_object import WorldObject
+from src.world.entities.item import Item
+from src.world.objects.vaso import Vaso
 
 class Game:
     def __init__(self):
@@ -30,23 +33,15 @@ class Game:
             
         self.maze = Maze("assets/maps/level01/Teste/map.tmx", scale_factor=4)
         # Carrega frames de cada tipo de objeto animado do ambiente
-        torch_path = "assets/catacombs rogue fantasy/RF_Catacombs_v1.0/"
         ts = self.maze.tile_size
+        vaso_size = (int(ts*1.7), int(ts*1.7))
+        vaso_frames = load_frames("assets/itens/vaso-frame-{}.png", 4, vaso_size)
+        
         self.env_frames = {
-            "torch": [
-                pygame.transform.scale(
-                    pygame.image.load(f"{torch_path}torch_{i}.png").convert_alpha(),
-                    (ts, ts)
-                )
-                for i in range(1, 5)
-            ],
-            "vaso": [
-                pygame.transform.scale(
-                    pygame.image.load(f"assets/itens/vaso-frame-{i}.png").convert_alpha(),
-                    (ts, ts)
-                )
-                for i in range(0, 3)
-            ]
+            "vaso": [vaso_frames[0]],
+            "vaso_highlight": [vaso_frames[1]],
+            "vaso_quebrado": [vaso_frames[3]],
+            "torch": load_frames("assets/catacombs rogue fantasy/RF_Catacombs_v1.0/torch_{}.png", 4, (ts, ts)),
         }
         self.fog = FogOfWar()
         self.camera = pygame.Vector2(0, 0)
@@ -74,21 +69,27 @@ class Game:
         self.camera.y = self.player.y - sh / 2
 
         # Instancia objetos de ambiente a partir dos dados do Object Layer
+        self.world_objects = []
+        self.items = []
+        self.items_para_spawnar = []
         self.env_objects = []
-        for data in self.maze.env_object_data:
-            frames = self.env_frames.get(data["type"])
-            if frames:
-                self.env_objects.append(EnvObject(data["x"], data["y"], frames))
 
-    def handle_input(self):
-        keys = pygame.key.get_pressed()
-        self.player.vx = self.player.vy = 0.0
-        
-        if not self.game_over and not self.won:
-            if keys[pygame.K_a] or keys[pygame.K_LEFT]:  self.player.vx -= self.player.speed
-            if keys[pygame.K_d] or keys[pygame.K_RIGHT]: self.player.vx += self.player.speed
-            if keys[pygame.K_w] or keys[pygame.K_UP]:    self.player.vy -= self.player.speed
-            if keys[pygame.K_s] or keys[pygame.K_DOWN]:  self.player.vy += self.player.speed
+        for data in self.maze.env_object_data:
+            if data["type"] == "vaso":
+                frames   = self.env_frames.get("vaso")
+                frames_h = self.env_frames.get("vaso_highlight")
+                frames_q = self.env_frames.get("vaso_quebrado")
+                if frames and frames_h and frames_q:
+                    self.world_objects.append(Vaso(data["x"], data["y"], frames, frames_h, frames_q))
+            elif data["type"] == "chave":
+                frames = self.env_frames.get(data["type"])
+                if frames:
+                    # self.items.append(Item(data["x"], data["y"], "chave_dourada", frames[0]))
+                    pass
+            elif data["type"] == "torch":
+                frames = self.env_frames.get(data["type"])
+                if frames:
+                    self.env_objects.append(EnvObject(data["x"], data["y"], frames))
 
     def check_conditions(self):
         px_grid = int(self.player.x // self.maze.tile_size)
@@ -134,14 +135,37 @@ class Game:
                         pygame.quit(); sys.exit()
                     if event.key == pygame.K_r and (self.game_over or self.won):
                         self.reset()
+                    if event.key == pygame.K_e:
+                        self.player.interagir(self.world_objects, self.items)
 
-            self.handle_input()
+            self.player.handle_input()
             
             if not self.game_over and not self.won:
                 self.player.update(dt, self.maze.wall_rects)
                 self.enemy.update(dt, self.player, self.maze)
-                for obj in self.env_objects:        # linha nova
+
+                for obj in self.env_objects:
                     obj.update(dt)
+                for obj in self.world_objects:
+                    obj.highlighted = False
+                    obj.update(dt)
+                for item in self.items:
+                    item.update(dt)
+                alvo = self.player._get_objeto_proximo(self.world_objects, self.items)
+                if alvo and hasattr(alvo, 'highlighted'):
+                    alvo.highlighted = True
+
+                self.world_objects = [o for o in self.world_objects if not o.dead]
+                self.items = [i for i in self.items if not i.dead]
+                
+                self.items.extend(self.items_para_spawnar)
+                for spawn in self.items_para_spawnar:
+                    frame = self.env_frames.get(spawn["type"])
+                    if frame:
+                        from src.world.entities.item import Item
+                        self.items.append(Item(spawn["x"], spawn["y"], spawn["type"], frame[0]))
+                self.items_para_spawnar.clear()
+
                 self.check_conditions()
 
             sw, sh = self.screen.get_size()
@@ -154,7 +178,7 @@ class Game:
             self.maze.draw(self.screen, self.camera, self.time)
             
             # Entidades e objetos de ambiente ordenados por Y para depth sorting correto
-            drawables = [self.player, self.enemy] + self.env_objects
+            drawables = [self.player, self.enemy] + self.env_objects + self.world_objects + self.items
             drawables.sort(key=lambda e: e.y)
             for e in drawables:
                 e.draw(self.screen, self.camera)

@@ -18,7 +18,7 @@ class EnemyAI(Actor):
         self.path = []
 
         # Instância do algoritmo A* sem movimento diagonal
-        self.finder = AStarFinder(diagonal_movement=DiagonalMovement.never)
+        self.finder = AStarFinder(diagonal_movement=DiagonalMovement.only_when_no_obstacle)
 
         # Temporizador que controla quando recalcular o caminho
         self.recalc_timer = 0.0
