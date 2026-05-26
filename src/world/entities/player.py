@@ -15,6 +15,7 @@ class Player(Actor):
         self.inventory = Inventory()
         self.interaction_range = 70
         self.items_para_spawnar = []
+        self.venceu = False
 
     def _get_objeto_a_frente(self, world_objects, items):
         offsets = {

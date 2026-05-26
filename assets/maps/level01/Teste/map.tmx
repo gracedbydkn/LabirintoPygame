@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="60" height="60" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="6">
+<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="60" height="60" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="12">
  <tileset firstgid="1" name="spritefusion" tilewidth="16" tileheight="16" tilecount="152" columns="8">
   <image source="spritesheet.png" width="128" height="304"/>
  </tileset>
@@ -206,9 +206,12 @@
 </data>
  </layer>
  <objectgroup id="4" name="Camada de Objetos">
-  <object id="1" name="vaso-frame-0.png" type="vaso" x="33.5" y="69.5"/>
-  <object id="2" name="vaso-quebrado-frame-0.png" type="vaso" x="172.5" y="70.5"/>
-  <object id="3" name="vaso-frame-0.png" x="33" y="126"/>
-  <object id="5" name="start" x="110" y="104"/>
+  <object id="1" name="vaso-frame-0.png" type="vaso" x="44" y="76"/>
+  <object id="2" name="vaso-frame-0" type="vaso" x="163" y="76"/>
+  <object id="3" name="vaso-frame-0.png" x="38.5" y="128"/>
+  <object id="5" name="start" x="104.667" y="107"/>
+  <object id="6" name="barreira.png" type="barreira" x="568.292" y="269.208"/>
+  <object id="7" name="runa_azul" type="runa" x="113.667" y="194.667"/>
+  <object id="11" name="porta_saida.png" type="porta_saida" x="567.938" y="60.375"/>
  </objectgroup>
 </map>

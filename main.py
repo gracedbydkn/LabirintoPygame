@@ -14,6 +14,8 @@ from src.world.env_object import EnvObject
 from src.world.entities.world_object import WorldObject
 from src.world.entities.item import Item
 from src.world.objects.vaso import Vaso
+from src.world.objects.barreira import Barreira
+from src.world.objects.porta_saida import PortaSaida
 
 class Game:
     def __init__(self):
@@ -38,6 +40,7 @@ class Game:
         vaso_frames = load_frames("assets/itens/vaso-frame-{}.png", 4, vaso_size)
         chave_size = (int(ts * 0.8), int(ts * 0.8))
         chave_frames = load_spritesheet_row("assets/itens/key_32x32_24f.png", 24, 32, 32, chave_size)
+        runa_frames = load_frames("assets/itens/runa_azul{}.png", 2, (ts*4,ts*4))
 
         self.env_frames = {
             "vaso": [vaso_frames[0]],
@@ -45,10 +48,14 @@ class Game:
             "vaso_quebrado": [vaso_frames[3]],
             "torch": load_frames("assets/catacombs rogue fantasy/RF_Catacombs_v1.0/torch_{}.png", 4, (ts, ts)),
             "chave": chave_frames,
+            "barreira": load_frames("assets/itens/barreira.png", 1, (ts*3, ts*3)),
+            "runa_azul": [runa_frames],
+            "porta_saida": load_frames("assets/itens/porta_saida.png", 1, (ts*4, ts*4)),
         }
         self.fog = FogOfWar()
         self.camera = pygame.Vector2(0, 0)
         self.reset()
+        
 
     def reset(self):
         self.game_over = False
@@ -78,21 +85,37 @@ class Game:
         self.env_objects = []
 
         for data in self.maze.env_object_data:
+            print(f"objeto: name={data['name']}, type={data['type']}")
             if data["type"] == "vaso":
                 frames   = self.env_frames.get("vaso")
                 frames_h = self.env_frames.get("vaso_highlight")
                 frames_q = self.env_frames.get("vaso_quebrado")
                 if frames and frames_h and frames_q:
                     self.world_objects.append(Vaso(data["x"], data["y"], frames, frames_h, frames_q, loot_type="chave"))
-            elif data["type"] == "chave":
-                frames = self.env_frames.get(data["type"])
-                if frames:
-                    # self.items.append(Item(data["x"], data["y"], "chave_dourada", frames[0]))
-                    pass
             elif data["type"] == "torch":
                 frames = self.env_frames.get(data["type"])
                 if frames:
                     self.env_objects.append(EnvObject(data["x"], data["y"], frames))
+            elif data["type"] == "barreira":
+                frames = self.env_frames.get("barreira")
+                if frames:
+                    self.world_objects.append(
+                        Barreira(data["x"], data["y"], frames, runa_necessaria="runa_azul")
+                    )
+            elif data["type"] == "runa":
+                frames = self.env_frames.get(data["name"])
+                if frames:
+                    self.items.append(
+                        Item(data["x"], data["y"], data["name"], frames[0],)
+                    )
+            elif data["type"] == "porta_saida":
+                frames = self.env_frames.get("porta_saida")
+                if frames:
+                    self.world_objects.append(
+                        PortaSaida(data["x"], data["y"], frames, chave_necessaria="chave")
+                    )
+            
+            
 
     def check_conditions(self):
         px_grid = int(self.player.x // self.maze.tile_size)
@@ -107,8 +130,8 @@ class Game:
         if dist_to_enemy < 20:
             self.game_over = True
 
-        # Condição de Vitória (Se o valor do chão for 2, é a saída)
-        if tile_value == 2:
+        # Condição de Vitória (Se o player passar pela porta final, ele ganha)
+        if self.player.venceu:
             self.won = True
 
     def draw_ui_overlay(self, title, color, bg_color):
@@ -150,8 +173,12 @@ class Game:
                 for obj in self.env_objects:
                     obj.update(dt)
                 for obj in self.world_objects:
-                    obj.highlighted = False
-                    obj.update(dt)
+                    if hasattr(obj, 'update') and 'jogador' in obj.update.__code__.co_varnames:
+                        obj.update(dt, self.player)
+                    else:
+                        obj.highlighted = False
+                        obj.update(dt)
+                   
                 for item in self.items:
                     item.update(dt)
                 alvo = self.player._get_objeto_proximo(self.world_objects, self.items)
