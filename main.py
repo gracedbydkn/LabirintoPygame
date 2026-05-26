@@ -20,6 +20,17 @@ from src.world.objects.porta_saida import PortaSaida
 class Game:
     def __init__(self):
         pygame.init()
+        pygame.joystick.init()
+
+        self.joystick = None
+        if pygame.joystick.get_count() > 0:
+            self.joystick = pygame.joystick.Joystick(0)
+            self.joystick.init()
+            print(f"Controle conectado: {self.joystick.get_name()}")
+        else:
+            print("Nenhum controle encontrado")
+
+        
         self.screen = pygame.display.set_mode((INIT_SCREEN_W, INIT_SCREEN_H), pygame.RESIZABLE)
         pygame.display.set_caption("Masmorra Dark Fantasy")
         self.clock = pygame.time.Clock()
@@ -69,7 +80,7 @@ class Game:
             spawn_x = 8.5 * self.maze.tile_size
             spawn_y = 8.5 * self.maze.tile_size
             
-        self.player = Player(spawn_x, spawn_y, self.sprite_player)
+        self.player = Player(spawn_x, spawn_y, self.sprite_player, joystick=self.joystick)
         enemy_x = 15.5 * self.maze.tile_size
         enemy_y = 10.5 * self.maze.tile_size
         self.enemy = EnemyAI(enemy_x, enemy_y, self.sprite_zumbi)
@@ -162,6 +173,11 @@ class Game:
                     if event.key == pygame.K_r and (self.game_over or self.won):
                         self.reset()
                     if event.key == pygame.K_e:
+                        self.player.interagir(self.world_objects, self.items)
+                        
+                # Gamepad — botões
+                if event.type == pygame.JOYBUTTONDOWN:
+                    if event.button == 0:  # A (Xbox) / Cruz (PS)
                         self.player.interagir(self.world_objects, self.items)
 
             self.player.handle_input()

@@ -5,8 +5,9 @@ from .actor import Actor
 from .inventory import Inventory
 
 class Player(Actor):
-    def __init__(self, x, y, sprite_manager):
+    def __init__(self, x, y, sprite_manager, joystick=None):
         super().__init__(x, y, sprite_manager)
+        self.joystick = joystick
 
         # Velocidade de movimento em pixels por segundo
         self.speed = 240
@@ -72,6 +73,25 @@ class Player(Actor):
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]: vx += 1
         if keys[pygame.K_w] or keys[pygame.K_UP]:    vy -= 1
         if keys[pygame.K_s] or keys[pygame.K_DOWN]:  vy += 1
+
+        # --- Gamepad ---
+        DEAD_ZONE = 0.15  # ignora ruído do analógico
+
+        if pygame.joystick.get_count() > 0:
+            joy = pygame.joystick.Joystick(0)
+
+            # Analógico esquerdo (eixos 0 e 1)
+            axis_x = joy.get_axis(0)
+            axis_y = joy.get_axis(1)
+
+            if abs(axis_x) > DEAD_ZONE: vx += axis_x
+            if abs(axis_y) > DEAD_ZONE: vy += axis_y
+
+            # D-pad (hat 0) — fallback caso o analógico não seja usado
+            
+            hat = joy.get_hat(0)
+            vx += hat[0]   # -1 (esq), 0, +1 (dir)
+            vy -= hat[1]   # hat Y é invertido no pygame
 
         direcao = pygame.Vector2(vx, vy)
         if direcao.length() > 0:
