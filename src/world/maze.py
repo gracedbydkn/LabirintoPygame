@@ -65,8 +65,18 @@ class Maze:
                         # Camada 1 é reservada para paredes (convenção do projeto)
                         if layer_index == 1:
                             self.matrix[y][x] = 1  # Marca como parede na matrix
-                            # Adiciona rect de colisão para essa parede
-                            self.wall_rects.append(pygame.Rect(px, py, self.tile_size, self.tile_size))
+                            props = self.tmx_data.get_tile_properties_by_gid(gid)
+                            if props and props.get('colliders'):
+                                for obj in props['colliders']:
+                                    self.wall_rects.append(pygame.Rect(
+                                        px + obj.x * self.scale,
+                                        py + obj.y * self.scale,
+                                        obj.width  * self.scale,
+                                        obj.height * self.scale
+                                    ))
+                            else:
+                                # Adiciona rect de colisão para essa parede
+                                self.wall_rects.append(pygame.Rect(px, py, self.tile_size, self.tile_size))
 
                         # Lê propriedades customizadas definidas no editor Tiled
                         if props:
