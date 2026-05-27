@@ -10,13 +10,16 @@ class WorldObject:
         self.frames = frames
         self.anim_speed = anim_speed
         self.frame_index = 0.0
+        
 
         self.radius = 24
+        frame_w = frames[0].get_width()
+        frame_h = frames[0].get_height()
         self.rect = pygame.Rect(
-            self.x - self.radius,
-            self.y - self.radius,
-            self.radius * 2,
-            self.radius * 2
+            self.x - frame_w // 2,
+            self.y - frame_h,
+            frame_w,
+            frame_h,
         )
 
         self.interactable: Interactable | None = None

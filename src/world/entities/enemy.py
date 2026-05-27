@@ -264,7 +264,7 @@ class EnemyAI(Actor):
         # Aplica velocidade e resolve colisões com paredes
         self.x += self.vx * dt
         self.y += self.vy * dt
-        self._resolve_collision(maze.wall_rects)
+        self._resolve_collision(maze.wall_rects + maze.object_rects)
 
         # Atualiza a direção visual baseada no vetor de movimento (apenas se estiver andando)
         if abs(self.vx) > 0.5 or abs(self.vy) > 0.5:

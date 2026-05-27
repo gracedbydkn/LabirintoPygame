@@ -52,6 +52,7 @@ class Game:
         chave_size = (int(ts * 0.8), int(ts * 0.8))
         chave_frames = load_spritesheet_row("assets/itens/key_32x32_24f.png", 24, 32, 32, chave_size)
         runa_frames = load_frames("assets/itens/runa_azul{}.png", 2, (ts*4,ts*4))
+        barreira_frames = load_frames("assets/itens/barreira-{}.png", 3, (ts*4.5, ts*4.5) )
 
         self.env_frames = {
             "vaso": [vaso_frames[0]],
@@ -59,7 +60,7 @@ class Game:
             "vaso_quebrado": [vaso_frames[3]],
             "torch": load_frames("assets/catacombs rogue fantasy/RF_Catacombs_v1.0/torch_{}.png", 4, (ts, ts)),
             "chave": chave_frames,
-            "barreira": load_frames("assets/itens/barreira.png", 1, (ts*3, ts*3)),
+            "barreira": barreira_frames,
             "runa_azul": [runa_frames],
             "porta_saida": load_frames("assets/itens/porta_saida.png", 1, (ts*4, ts*4)),
         }
@@ -111,7 +112,7 @@ class Game:
                 frames = self.env_frames.get("barreira")
                 if frames:
                     self.world_objects.append(
-                        Barreira(data["x"], data["y"], frames, runa_necessaria="runa_azul")
+                        Barreira(data["x"], data["y"], frames, runa_necessaria="runa_azul", anim_speed=8)
                     )
             elif data["type"] == "runa":
                 frames = self.env_frames.get(data["name"])
@@ -182,8 +183,9 @@ class Game:
 
             self.player.handle_input()
             
+            self.maze.object_rects =[obj.rect for obj in self.world_objects if obj.solid]
             if not self.game_over and not self.won:
-                self.player.update(dt, self.maze.wall_rects)
+                self.player.update(dt, self.maze.wall_rects+self.maze.object_rects)
                 self.enemy.update(dt, self.player, self.maze)
 
                 for obj in self.env_objects:

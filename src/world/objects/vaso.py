@@ -38,5 +38,4 @@ class Vaso(WorldObject):
             })
         
         self.broken = True
-        self.solid = False
         self.interactable.enabled = False

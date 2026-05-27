@@ -21,6 +21,7 @@ class Maze:
 
         # Lista de retângulos das paredes — usada para detecção de colisão
         self.wall_rects = []
+        self.object_rects = []
 
 
         # Matriz lógica do mapa: 0=chão, 1=parede, 2=saída, 3=esconderijo
