@@ -10,7 +10,18 @@ class Player(Actor):
         self.joystick = joystick
 
         # Velocidade de movimento em pixels por segundo
-        self.speed = 240
+        self.base_speed = 220
+        self.run_speed = 300
+        self.speed = self.base_speed
+
+        # --- Sistema de Stamina ---
+        self.max_stamina = 100.0
+        self.stamina = self.max_stamina
+        self.stamina_drain = 35.0  # Zera em ~2.8 segundos de corrida contínua
+        self.stamina_regen = 15.0  # Recupera tudo em ~6.6 segundos andando/parado
+        self.exhausted = False     # Fica True se zerar a stamina
+        self.is_running = False
+
         # Flag que indica se o jogador está em um esconderijo (afeta detecção pelo inimigo)
         self.is_hidden = False
         self.inventory = Inventory()
@@ -74,6 +85,8 @@ class Player(Actor):
         if keys[pygame.K_w] or keys[pygame.K_UP]:    vy -= 1
         if keys[pygame.K_s] or keys[pygame.K_DOWN]:  vy += 1
 
+        trying_to_run = keys[pygame.K_LSHIFT]
+
         # --- Gamepad ---
         DEAD_ZONE = 0.15  # ignora ruído do analógico
 
@@ -93,9 +106,20 @@ class Player(Actor):
             vx += hat[0]   # -1 (esq), 0, +1 (dir)
             vy -= hat[1]   # hat Y é invertido no pygame
 
+            if joy.get_button(2) or joy.get_button(5):
+                trying_to_run = True
+
         direcao = pygame.Vector2(vx, vy)
-        if direcao.length() > 0:
+        moving = direcao.length() > 0
+        if moving:
             direcao.normalize_ip()
+
+        if trying_to_run and moving and not self.exhausted:
+            self.is_running = True
+            self.speed = self.run_speed
+        else:
+            self.is_running = False
+            self.speed = self.base_speed
         
         self.vx = direcao.x * self.speed
         self.vy = direcao.y * self.speed
@@ -119,7 +143,27 @@ class Player(Actor):
         # Determina se está em movimento para controlar qual animação exibir
         self.moving = self.vx != 0 or self.vy != 0
 
-        if self.moving:
+        # --- Gerenciamento da Stamina ---
+        if self.is_running:
+            self.stamina -= self.stamina_drain * dt
+            if self.stamina <= 0:
+                self.stamina = 0
+                self.exhausted = True     # Punição: o jogador perdeu o fôlego
+                self.is_running = False
+                self.speed = self.base_speed
+        else:
+            self.stamina += self.stamina_regen * dt
+            if self.stamina >= self.max_stamina:
+                self.stamina = self.max_stamina
+            
+            # Condição para sair da exaustão: recuperar pelo menos 30% da barra
+            if self.exhausted and self.stamina > self.max_stamina * 0.3:
+                self.exhausted = False
+                
+        if self.is_running and self.moving:
+            self.current_animation = f'run_{self.direction}' # 8 frames de corrida
+            self.frame_index = (self.frame_index + self.anim_speed_run * dt) % 8
+        elif self.moving:
             self.current_animation = self.direction          # 9 frames de caminhada
             self.frame_index = (self.frame_index + self.anim_speed * dt) % 9
         else:

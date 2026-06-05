@@ -158,6 +158,27 @@ class Game:
         self.screen.blit(txt_title, txt_title.get_rect(center=(sw//2, sh//2 - 20)))
         self.screen.blit(txt_sub, txt_sub.get_rect(center=(sw//2, sh//2 + 30)))
 
+    def draw_hud(self):
+        # Configurações da barra de stamina
+        bar_width = 200
+        bar_height = 15
+        x_pos = 20
+        y_pos = 20
+        
+        # Cores (muda para vermelho se estiver exausto)
+        bg_color = (50, 50, 50, 180)
+        stamina_color = (150, 50, 50) if self.player.exhausted else (50, 150, 50)
+        
+        # Calcula a porcentagem de stamina atual
+        fill_width = int((self.player.stamina / self.player.max_stamina) * bar_width)
+        
+        # Fundo da barra
+        pygame.draw.rect(self.screen, bg_color, (x_pos, y_pos, bar_width, bar_height))
+        # Preenchimento da barra
+        pygame.draw.rect(self.screen, stamina_color, (x_pos, y_pos, fill_width, bar_height))
+        # Borda
+        pygame.draw.rect(self.screen, (200, 200, 200), (x_pos, y_pos, bar_width, bar_height), 2)
+
     def run(self):
         while True:
             dt = min(self.clock.tick(FPS) / 1000.0, 0.05)
@@ -233,7 +254,9 @@ class Game:
                 self.maze.draw_top(self.screen, self.camera)
             if not self.won:
                 self.fog.draw(self.screen, self.player.x, self.player.y, self.camera, self.time, self.maze)
-
+            if not self.game_over and not self.won:
+                self.draw_hud()
+                
             if self.game_over:
                 self.draw_ui_overlay("VOCÊ FOI PEGO!", (255, 50, 50), (60, 0, 0, 180))
             elif self.won:

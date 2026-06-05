@@ -23,6 +23,7 @@ class Actor:
         # Velocidade de avanço dos frames de animação (frames por segundo lógico)
         self.anim_speed = 10
         self.anim_speed_idle = 2
+        self.anim_speed_run = 10
 
         # Indica se o ator está em movimento (usado para alternar idle/walk)
         self.moving = False

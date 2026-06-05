@@ -21,7 +21,11 @@ class CharacterSprite:
             'up': self._extract_row(8, 9),
             'left': self._extract_row(9, 9),
             'down': self._extract_row(10, 9),
-            'right': self._extract_row(11, 9)
+            'right': self._extract_row(11, 9),
+            'run_up': self._extract_row(38, 8),
+            'run_left': self._extract_row(39, 8),
+            'run_down': self._extract_row(40, 8),
+            'run_right': self._extract_row(41, 8)
         }
 
     def _extract_row(self, row, num_frames):
