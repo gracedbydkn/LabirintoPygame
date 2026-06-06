@@ -10,7 +10,7 @@ FPS = 60
 # --- Configurações de Visão (Fog of War) ---
 
 # Raio em pixels da área iluminada ao redor do jogador
-FOV_RADIUS = 280
+FOV_RADIUS = 880 # 280
 
 # Número de raios lançados para calcular o campo de visão (um por grau = 360°)
 FOV_RAYS = 360

@@ -66,8 +66,9 @@ class Game:
         }
         self.fog = FogOfWar()
         self.camera = pygame.Vector2(0, 0)
+        self.key_hints = self._carregar_teclas()
         self.reset()
-        
+
 
     def reset(self):
         self.game_over = False
@@ -126,7 +127,56 @@ class Game:
                     self.world_objects.append(
                         PortaSaida(data["x"], data["y"], frames, chave_necessaria="chave")
                     )
-            
+    
+
+    def _carregar_tecla(self, nome, tamanho=(40, 40)):
+        try:
+            raw = pygame.image.load(f"assets/keyboard-keys/{nome}.png").convert_alpha()
+            rw, rh = raw.get_size()
+            fw = rw // 3
+            return [
+                pygame.transform.scale(raw.subsurface((i * fw, 0, fw, rh)), tamanho)
+                for i in range(3)
+            ]
+        except (FileNotFoundError, pygame.error):
+            return None
+
+    def _carregar_teclas(self):
+        nomes = ["E", "W", "A", "S", "D", "ARROWUP", "ARROWLEFT", "ARROWDOWN", "ARROWRIGHT"]
+        return {n: self._carregar_tecla(n) for n in nomes}
+
+    def draw_key_hints(self):
+        # frame atual: normal (0) → pressionada (1) → subindo (2)
+        ciclo = self.time % 0.86
+        f = 0 if ciclo < 0.50 else (1 if ciclo < 0.68 else 2)
+
+        # Tecla E acima do objeto interagível mais próximo
+        alvo = self.player._get_objeto_proximo(self.world_objects, self.items)
+        frames = alvo and self.key_hints.get("E")
+        if frames:
+            sx = int(alvo.x - self.camera.x)
+            sy = int(alvo.y - self.camera.y) - 100
+            frame = frames[f]
+            self.screen.blit(frame, (sx - frame.get_width() // 2, sy - frame.get_height() // 2))
+
+        # WASD / Setas após 5s parado — alterna a cada 3.5s
+        if self.player.idle_time >= 5.0:
+            sw, sh = self.screen.get_size()
+            setas = int(self.player.idle_time / 3.5) % 2 == 1
+            step = 44
+            cx, cy = sw // 2, sh - 72
+            teclas = (
+                [("ARROWUP", cx, cy - step), ("ARROWLEFT", cx - step, cy),
+                ("ARROWDOWN", cx, cy), ("ARROWRIGHT", cx + step, cy)]
+                if setas else
+                [("W", cx, cy - step), ("A", cx - step, cy),
+                ("S", cx, cy), ("D", cx + step, cy)]
+            )
+            for nome, x, y in teclas:
+                frames = self.key_hints.get(nome)
+                if frames:
+                    frame = frames[f]
+                    self.screen.blit(frame, (x - frame.get_width() // 2, y - frame.get_height() // 2))
             
 
     def check_conditions(self):
@@ -256,6 +306,8 @@ class Game:
                 self.fog.draw(self.screen, self.player.x, self.player.y, self.camera, self.time, self.maze)
             if not self.game_over and not self.won:
                 self.draw_hud()
+
+            self.draw_key_hints()
                 
             if self.game_over:
                 self.draw_ui_overlay("VOCÊ FOI PEGO!", (255, 50, 50), (60, 0, 0, 180))

@@ -10,9 +10,10 @@ class Player(Actor):
         self.joystick = joystick
 
         # Velocidade de movimento em pixels por segundo
-        self.base_speed = 220
+        self.base_speed = 420 # 220
         self.run_speed = 300
         self.speed = self.base_speed
+        self.idle_time = 0.0
 
         # --- Sistema de Stamina ---
         self.max_stamina = 100.0
@@ -142,6 +143,7 @@ class Player(Actor):
 
         # Determina se está em movimento para controlar qual animação exibir
         self.moving = self.vx != 0 or self.vy != 0
+        self.idle_time = 0.0 if self.moving else self.idle_time + dt
 
         # --- Gerenciamento da Stamina ---
         if self.is_running:
