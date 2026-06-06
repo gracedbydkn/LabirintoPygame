@@ -16,6 +16,8 @@ from src.world.entities.item import Item
 from src.world.objects.vaso import Vaso
 from src.world.objects.barreira import Barreira
 from src.world.objects.porta_saida import PortaSaida
+from src.world.objects.esconderijo import Esconderijo
+
 
 class Game:
     def __init__(self):
@@ -53,6 +55,7 @@ class Game:
         chave_frames = load_spritesheet_row("assets/itens/key_32x32_24f.png", 24, 32, 32, chave_size)
         runa_frames = load_frames("assets/itens/runa_azul{}.png", 2, (ts*4,ts*4))
         barreira_frames = load_frames("assets/itens/barreira-{}.png", 3, (ts*4.5, ts*4.5) )
+        barril_frames = load_frames("assets/itens/barril-{}.png", 4, (ts*1.7, ts*1.7))
 
         self.env_frames = {
             "vaso": [vaso_frames[0]],
@@ -63,6 +66,10 @@ class Game:
             "barreira": barreira_frames,
             "runa_azul": [runa_frames],
             "porta_saida": load_frames("assets/itens/porta_saida.png", 1, (ts*4, ts*4)),
+            "barril": [barril_frames[0]],
+            "barril_aberto": [barril_frames[1]],
+            "barril_player": [barril_frames[2]],
+            "barril_highlight": [barril_frames[3]]
         }
         self.fog = FogOfWar()
         self.camera = pygame.Vector2(0, 0)
@@ -126,6 +133,15 @@ class Game:
                 if frames:
                     self.world_objects.append(
                         PortaSaida(data["x"], data["y"], frames, chave_necessaria="chave")
+                    )
+            elif data["type"] == "esconderijo":
+                frames = self.env_frames.get("barril")
+                frames_a = self.env_frames.get("barril_aberto")
+                frames_p = self.env_frames.get("barril_player")
+                frames_h = self.env_frames.get("barril_highlight")
+                if frames and frames_a and frames_p and frames_h:
+                    self.world_objects.append(
+                        Esconderijo(data["x"], data["y"], frames, frames_a, frames_p, frames_h)
                     )
     
 
@@ -297,7 +313,8 @@ class Game:
             self.maze.draw(self.screen, self.camera, self.time)
             
             # Entidades e objetos de ambiente ordenados por Y para depth sorting correto
-            drawables = [self.player, self.enemy] + self.env_objects + self.world_objects + self.items
+            drawables = ([] if self.player.is_hidden else [self.player])
+            drawables += [self.enemy] + self.env_objects + self.world_objects + self.items
             drawables.sort(key=lambda e: e.y)
             for e in drawables:
                 e.draw(self.screen, self.camera)

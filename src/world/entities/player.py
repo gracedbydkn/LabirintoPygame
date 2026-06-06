@@ -29,6 +29,7 @@ class Player(Actor):
         self.interaction_range = 70
         self.items_para_spawnar = []
         self.venceu = False
+        self.esconderijo_atual = None # Referência para o esconderijo onde o jogador está, se houver
 
     def _get_objeto_a_frente(self, world_objects, items):
         offsets = {
@@ -124,6 +125,12 @@ class Player(Actor):
         
         self.vx = direcao.x * self.speed
         self.vy = direcao.y * self.speed
+
+        if self.is_hidden:
+            # Se estiver escondido, não deve se mover mesmo que haja input, e a direção visual não deve mudar.
+            self.vx = 0
+            self.vy = 0
+            return
 
     def update(self, dt, walls):
         """Atualiza posição, colisão, direção e animação do jogador a cada frame.""" 
