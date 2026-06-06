@@ -93,6 +93,7 @@ class Maze:
                         "type": obj.type,
                         "x": obj.x * self.scale,
                         "y": obj.y * self.scale,
+                        "loot": obj.properties.get("loot", None)
                     })
 
     def get_tile_value(self, grid_x, grid_y):
