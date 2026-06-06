@@ -44,7 +44,7 @@ class Game:
             print("Erro: Imagem não encontrada.")
             sys.exit(1)
             
-        self.maze = Maze("assets/maps/level01/Teste/map.tmx", scale_factor=4)
+        self.maze = Maze("assets/maps/catacombs/map.tmx", scale_factor=4)
         # Carrega frames de cada tipo de objeto animado do ambiente
         ts = self.maze.tile_size
         vaso_size = (int(ts*1.7), int(ts*1.7))
