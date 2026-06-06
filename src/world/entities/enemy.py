@@ -91,10 +91,27 @@ class EnemyAI(Actor):
         end   = grid.node(tx, ty)
 
         # Só calcula se origem e destino forem tiles caminháveis
+        if not end.walkable:
+            tx, ty, end = self._nearest_walkable(grid, tx, ty, maze)
+
         if start.walkable and end.walkable:
             path, _ = self.finder.find_path(start, end, grid)
             return path
         return []
+    
+    def _nearest_walkable(self, grid, tx, ty, maze):
+        """Busca em anéis crescentes o tile caminhável mais próximo de (tx, ty)."""
+        for r in range(1, 4):
+            for dy in range(-r, r + 1):
+                for dx in range(-r, r + 1):
+                    if abs(dx) < r and abs(dy) < r:
+                        continue  # interior do anel — já checado em r anterior
+                    nx = max(0, min(tx + dx, maze.cols - 1))
+                    ny = max(0, min(ty + dy, maze.rows - 1))
+                    node = grid.node(nx, ny)
+                    if node.walkable:
+                        return nx, ny, node
+        return tx, ty, grid.node(tx, ty)
 
     def _random_walkable_pos(self, maze):
         """Sorteia uma posição aleatória caminhável no mapa.
@@ -157,8 +174,8 @@ class EnemyAI(Actor):
             too_close = dist_to_player < maze.tile_size * 1.5
             # Detecção por campo de visão: dentro do raio + olhando + sem obstáculo
             in_fov = (dist_to_player < (FOV_RADIUS + FOV_SOFT_EDGE)
-                      and self.is_facing_player(player)
-                      and self.has_line_of_sight(player.x, player.y, maze))
+                      and self.has_line_of_sight(player.x, player.y, maze)
+                      and (self.state == 'CHASE' or self.is_facing_player(player)))
             can_see_player = too_close or in_fov
 
         # --- Máquina de Estados ---

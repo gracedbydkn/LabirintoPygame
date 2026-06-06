@@ -303,7 +303,8 @@ class Game:
                 e.draw(self.screen, self.camera)
                 self.maze.draw_top(self.screen, self.camera)
             if not self.won:
-                self.fog.draw(self.screen, self.player.x, self.player.y, self.camera, self.time, self.maze)
+                tochas = [(obj.x, obj.y) for obj in self.env_objects]
+                self.fog.draw(self.screen, self.player.x, self.player.y, self.camera, self.time, self.maze, tochas)
             if not self.game_over and not self.won:
                 self.draw_hud()
 

@@ -9,14 +9,16 @@ FPS = 60
 
 # --- Configurações de Visão (Fog of War) ---
 
-# Raio em pixels da área iluminada ao redor do jogador
-FOV_RADIUS = 880 # 280
+# Raio em pixels da área circular ao redor iluminada
+FOV_RADIUS = 280
+TORCH_FOV_RADIUS  = 140
 
 # Número de raios lançados para calcular o campo de visão (um por grau = 360°)
 FOV_RAYS = 360
 
 # Zona extra além do FOV_RADIUS onde a luz se apaga gradualmente (evita corte abrupto)
 FOV_SOFT_EDGE = 120
+TORCH_FOV_SOFT    = 60
 
 # --- Paleta de Cores Dark Fantasy (valores RGB) ---
 
