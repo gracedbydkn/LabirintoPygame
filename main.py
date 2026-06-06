@@ -104,7 +104,7 @@ class Game:
                 frames_h = self.env_frames.get("vaso_highlight")
                 frames_q = self.env_frames.get("vaso_quebrado")
                 if frames and frames_h and frames_q:
-                    self.world_objects.append(Vaso(data["x"], data["y"], frames, frames_h, frames_q, loot_type="chave"))
+                    self.world_objects.append(Vaso(data["x"], data["y"], frames, frames_h, frames_q, loot_type=data["chave"]))
             elif data["type"] == "torch":
                 frames = self.env_frames.get(data["type"])
                 if frames:
