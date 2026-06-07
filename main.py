@@ -53,8 +53,8 @@ class Game:
         vaso_frames = load_frames("assets/itens/vaso-frame-{}.png", 4, vaso_size)
         chave_size = (int(ts * 0.8), int(ts * 0.8))
         chave_frames = load_spritesheet_row("assets/itens/key_32x32_24f.png", 24, 32, 32, chave_size)
-        runa_frames = load_frames("assets/itens/runa_azul{}.png", 2, (ts*4,ts*4))
-        barreira_frames = load_frames("assets/itens/barreira-{}.png", 3, (ts*4.5, ts*4.5) )
+        runa_roxa_frames = load_frames("assets/itens/runa-roxa-{}.png", 2, (ts*4,ts*4))
+        barreira_roxa_frames = load_frames("assets/itens/barreira-roxa-{}.png", 3, (ts*4.5, ts*4.5) )
         barril_frames = load_frames("assets/itens/barril-{}.png", 4, (ts*1.7, ts*1.7))
 
         self.env_frames = {
@@ -63,8 +63,8 @@ class Game:
             "vaso_quebrado": [vaso_frames[3]],
             "torch": load_frames("assets/catacombs rogue fantasy/RF_Catacombs_v1.0/torch_{}.png", 4, (ts, ts)),
             "chave": chave_frames,
-            "barreira": barreira_frames,
-            "runa_azul": [runa_frames],
+            "barreira_roxa": barreira_roxa_frames,
+            "runa_roxa": [runa_roxa_frames],
             "porta_saida": load_frames("assets/itens/porta_saida.png", 1, (ts*4, ts*4)),
             "barril": [barril_frames[0]],
             "barril_aberto": [barril_frames[1]],
@@ -105,7 +105,6 @@ class Game:
         self.env_objects = []
 
         for data in self.maze.env_object_data:
-            print(f"objeto: name={data['name']}, type={data['type']}")
             if data["type"] == "vaso":
                 frames   = self.env_frames.get("vaso")
                 frames_h = self.env_frames.get("vaso_highlight")
@@ -117,10 +116,10 @@ class Game:
                 if frames:
                     self.env_objects.append(EnvObject(data["x"], data["y"], frames))
             elif data["type"] == "barreira":
-                frames = self.env_frames.get("barreira")
+                frames = self.env_frames.get(data["name"])
                 if frames:
                     self.world_objects.append(
-                        Barreira(data["x"], data["y"], frames, runa_necessaria="runa_azul", anim_speed=8)
+                        Barreira(data["x"], data["y"], frames, runa_necessaria=data["runa"], anim_speed=8)
                     )
             elif data["type"] == "runa":
                 frames = self.env_frames.get(data["name"])
