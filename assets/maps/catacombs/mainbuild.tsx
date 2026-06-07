@@ -19,7 +19,7 @@
  <tile id="259">
   <objectgroup draworder="index" id="2">
    <object id="1" x="0" y="0">
-    <polygon points="0,0 16,0 16,16 10,16 10.0056,8.98333 0,8.99444"/>
+    <polygon points="16,0 16,16 11.9878,16.0435 11.9588,2.95498 0.0747283,2.94553 0,0"/>
    </object>
   </objectgroup>
  </tile>

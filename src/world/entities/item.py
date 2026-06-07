@@ -16,7 +16,7 @@ class Item:
 
         self.anim_speed = anim_speed
         self.frame_index = 0.0
-
+        frame=self.frames[0]
         self.rect = pygame.Rect(self.x - 16, self.y - 16, 32, 32)
         self.dead = False
 
