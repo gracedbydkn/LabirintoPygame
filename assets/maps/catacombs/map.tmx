@@ -236,8 +236,12 @@
    </properties>
   </object>
   <object id="5" name="start" x="141.743" y="165.561"/>
-  <object id="6" name="barreira.png" type="barreira" x="600.531" y="327.924"/>
-  <object id="7" name="runa_azul" type="runa" x="92.3337" y="352"/>
+  <object id="6" name="barreira_roxa.png" type="barreira" x="600.531" y="327.924">
+   <properties>
+    <property name="runa" value="runa_roxa"/>
+   </properties>
+  </object>
+  <object id="7" name="runa_roxa" type="runa" x="92.3337" y="352"/>
   <object id="11" name="porta_saida.png" type="porta_saida" x="904.188" y="64.1666"/>
   <object id="13" name="barreira.png" type="barreira" x="505.576" y="663.917"/>
   <object id="14" name="barril" type="esconderijo" x="143" y="279.667"/>
