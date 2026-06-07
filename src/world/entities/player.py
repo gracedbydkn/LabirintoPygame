@@ -10,7 +10,7 @@ class Player(Actor):
         self.joystick = joystick
 
         # Velocidade de movimento em pixels por segundo
-        self.base_speed = 420 # 220
+        self.base_speed = 220 # 220
         self.run_speed = 300
         self.speed = self.base_speed
         self.idle_time = 0.0
@@ -33,23 +33,36 @@ class Player(Actor):
 
     def _get_objeto_a_frente(self, world_objects, items):
         offsets = {
-            'right': (self.interaction_range, 0),
-            'left': (-self.interaction_range, 0),
-            'down': (0, self.interaction_range),
-            'up': (0, -self.interaction_range)
+            'right': (1, 0),
+            'left': (-1, 0),
+            'down': (0, 1),
+            'up': (0, -1)
         }
-        ox, oy = offsets[self.direction]
-        px = self.x + ox
-        py = self.y + oy
+        perp = {
+            'right': (0, 1),
+            'left': (0, -1),
+            'down': (1, 0),
+            'up': (-1, 0)
+        }
 
-        for obj in world_objects:
-            if obj.rect.collidepoint(px, py):
-                return obj
+        dx, dy = offsets[self.direction]
+        px_, py_ = perp[self.direction]
+        largura_lateral = 25
 
-        for item in items:
-            if item.rect.collidepoint(px, py):
-                return item
-        
+        for dist in range(10, self.interaction_range + 10, 10):
+            pontos = [
+                (self.x + dx * dist, self.y + dy * dist),
+                (self.x + dx * dist + px_ * largura_lateral, self.y + dy * dist + py_ * largura_lateral),
+                (self.x + dx * dist - px_ * largura_lateral, self.y + dy * dist - py_ * largura_lateral),
+            ]
+
+            for px, py in pontos:
+                for obj in world_objects:
+                    if obj.rect.collidepoint(px, py):
+                        return obj
+                for item in items:
+                    if item.rect.collidepoint(px, py):
+                        return item
         return None
     
     def _get_objeto_proximo(self, world_objects, items):
@@ -70,17 +83,21 @@ class Player(Actor):
             if self.esconderijo_atual:
                 self.esconderijo_atual.interactable.interact(self)
             return
-        # Para WorldObjects: exige estar olhando na direção (ex: quebrar vaso)
-        alvo_objeto = self._get_objeto_proximo(world_objects, [])
-        print(f"alvo encontrado: {alvo_objeto}")
-        if alvo_objeto and isinstance(alvo_objeto, WorldObject) and alvo_objeto.interactable:
-            alvo_objeto.interactable.interact(self)
-            return
-
+        
         # Para Items: basta estar próximo (ex: pegar chave)
         alvo_item = self._get_objeto_proximo([], items)
         if alvo_item and isinstance(alvo_item, Item):
             alvo_item.collect(self)
+            return
+        
+        # Para WorldObjects: exige estar olhando na direção (ex: quebrar vaso)
+        objetos_interagiveis = [
+            o for o in world_objects
+            if o.interactable and o.interactable.enabled
+        ]
+        alvo_objeto = self._get_objeto_a_frente(objetos_interagiveis, [])
+        if alvo_objeto:
+            alvo_objeto.interactable.interact(self)
 
     def handle_input(self):
         if self.is_hidden:
