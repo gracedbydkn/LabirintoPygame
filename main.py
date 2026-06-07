@@ -168,7 +168,16 @@ class Game:
 
         # Tecla E acima do objeto interagível mais próximo
         alvo = self.player._get_objeto_proximo(self.world_objects, self.items)
-        frames = alvo and self.key_hints.get("E")
+        pode_interagir = (
+            alvo and (
+                (isinstance(alvo, Item) and not alvo.dead)
+                or (hasattr(alvo, 'interactable') and alvo.interactable and alvo.interactable.enabled)
+            )
+        )
+        if not pode_interagir:
+            alvo = self.player._get_objeto_proximo([], self.items)
+            pode_interagir = bool(alvo)
+        frames = pode_interagir and self.key_hints.get("E")
         if frames:
             sx = int(alvo.x - self.camera.x)
             sy = int(alvo.y - self.camera.y) - 100
