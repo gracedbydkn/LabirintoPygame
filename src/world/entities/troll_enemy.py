@@ -1,0 +1,252 @@
+# src/world/entities/troll_enemy.py
+import math
+import random
+from pathfinding.core.diagonal_movement import DiagonalMovement
+from pathfinding.core.grid import Grid
+from pathfinding.finder.a_star import AStarFinder
+from src.core.config import FOV_RADIUS, FOV_SOFT_EDGE
+from .actor import Actor
+
+
+class TrollEnemy(Actor):
+    def __init__(self, x, y, sprite_manager):
+        super().__init__(x, y, sprite_manager)
+
+        self.state = 'WANDER'
+        self.path = []
+        self.finder = AStarFinder(diagonal_movement=DiagonalMovement.never)
+        self.recalc_timer = 0.0
+        self.radius = 20
+        self.last_known_pos = None
+        self.patrol_points = []
+        self.patrol_index = 0
+        self.alert_timer = 0.0
+
+        # Animação inicial
+        self.current_animation = 'idle_down'
+
+    # ------------------------------------------------------------------ #
+    #  Visão / Pathfinding — idêntico ao EnemyAI                          #
+    # ------------------------------------------------------------------ #
+
+    def has_line_of_sight(self, target_x, target_y, maze):
+        dx = target_x - self.x
+        dy = target_y - self.y
+        dist = math.hypot(dx, dy)
+        if dist == 0:
+            return True
+        step = maze.tile_size / 2
+        steps = int(dist / step)
+        dir_x = dx / dist
+        dir_y = dy / dist
+        for i in range(steps):
+            cx = self.x + dir_x * (i * step)
+            cy = self.y + dir_y * (i * step)
+            tx = int(cx // maze.tile_size)
+            ty = int(cy // maze.tile_size)
+            if 0 <= tx < maze.cols and 0 <= ty < maze.rows:
+                if maze.matrix[ty][tx] == 1:
+                    return False
+        return True
+
+    def is_facing_player(self, player):
+        dx = player.x - self.x
+        dy = player.y - self.y
+        dirs = {'up': (0, -1), 'down': (0, 1), 'left': (-1, 0), 'right': (1, 0)}
+        fx, fy = dirs[self.direction]
+        dist = math.hypot(dx, dy)
+        if dist == 0:
+            return True
+        dot = (dx / dist) * fx + (dy / dist) * fy
+        return dot > 0.5
+
+    def get_path(self, target_x, target_y, maze):
+        pf_matrix = [[1 if cell != 1 else 0 for cell in row] for row in maze.matrix]
+        grid = Grid(matrix=pf_matrix)
+        sx = max(0, min(int(self.x // maze.tile_size), maze.cols - 1))
+        sy = max(0, min(int(self.y // maze.tile_size), maze.rows - 1))
+        tx = max(0, min(int(target_x // maze.tile_size), maze.cols - 1))
+        ty = max(0, min(int(target_y // maze.tile_size), maze.rows - 1))
+        start = grid.node(sx, sy)
+        end   = grid.node(tx, ty)
+        if not end.walkable:
+            tx, ty, end = self._nearest_walkable(grid, tx, ty, maze)
+        if start.walkable and end.walkable:
+            path, _ = self.finder.find_path(start, end, grid)
+            return path
+        return []
+
+    def _nearest_walkable(self, grid, tx, ty, maze):
+        for r in range(1, 4):
+            for dy in range(-r, r + 1):
+                for dx in range(-r, r + 1):
+                    if abs(dx) < r and abs(dy) < r:
+                        continue
+                    nx = max(0, min(tx + dx, maze.cols - 1))
+                    ny = max(0, min(ty + dy, maze.rows - 1))
+                    node = grid.node(nx, ny)
+                    if node.walkable:
+                        return nx, ny, node
+        return tx, ty, grid.node(tx, ty)
+
+    def _random_walkable_pos(self, maze):
+        for _ in range(50):
+            rx = random.randint(1, maze.cols - 2)
+            ry = random.randint(1, maze.rows - 2)
+            if maze.matrix[ry][rx] != 1:
+                return rx * maze.tile_size + maze.tile_size // 2, ry * maze.tile_size + maze.tile_size // 2
+        return self.x, self.y
+
+    def _move_along_path(self, dt, maze, override_target=None):
+        if not self.path:
+            self.vx = self.vy = 0
+            return True
+        if len(self.path) > 1:
+            node = self.path[1]
+            target_x = node.x * maze.tile_size + maze.tile_size // 2
+            target_y = node.y * maze.tile_size + maze.tile_size // 2
+        else:
+            if override_target:
+                target_x, target_y = override_target
+            else:
+                self.vx = self.vy = 0
+                return True
+        dx = target_x - self.x
+        dy = target_y - self.y
+        dist = math.hypot(dx, dy)
+        if dist < self.speed * dt + 2:
+            if len(self.path) > 1:
+                self.path.pop(0)
+                return False
+            else:
+                self.vx = self.vy = 0
+                return True
+        else:
+            self.vx = (dx / dist) * self.speed
+            self.vy = (dy / dist) * self.speed
+            return False
+
+    # ------------------------------------------------------------------ #
+    #  Animação — específica do Troll                                      #
+    # ------------------------------------------------------------------ #
+
+    def _update_animation(self, dt):
+        self.moving = abs(self.vx) > 1 or abs(self.vy) > 1
+
+        if self.moving:
+            anim_key = self.direction               # 'up' | 'down' | 'left' | 'right'
+        else:
+            anim_key = f'idle_{self.direction}'     # 'idle_up' | 'idle_down' | etc.
+
+        self.current_animation = anim_key
+        frames = self.sprites.animations[anim_key]
+        speed = self.anim_speed if self.moving else self.anim_speed_idle
+        self.frame_index = (self.frame_index + speed * dt) % len(frames)
+
+    # ------------------------------------------------------------------ #
+    #  Update principal — mesma lógica do EnemyAI                         #
+    # ------------------------------------------------------------------ #
+
+    def update(self, dt, player, maze):
+        self.recalc_timer -= dt
+        dist_to_player = math.hypot(player.x - self.x, player.y - self.y)
+
+        # --- Sensores ---
+        can_see_player = False
+        if not player.is_hidden:
+            too_close = dist_to_player < maze.tile_size * 1.5
+            in_fov = (dist_to_player < (FOV_RADIUS + FOV_SOFT_EDGE)
+                      and self.has_line_of_sight(player.x, player.y, maze)
+                      and (self.state == 'CHASE' or self.is_facing_player(player)))
+            can_see_player = too_close or in_fov
+
+        # --- Máquina de Estados ---
+        if player.is_hidden:
+            if self.state in ('CHASE', 'ALERT'):
+                self.state = 'INVESTIGATE'
+                self.recalc_timer = 0
+        elif can_see_player:
+            if self.state in ('WANDER', 'PATROL'):
+                self.state = 'ALERT'
+                self.last_known_pos = (player.x, player.y)
+                self.alert_timer = random.uniform(0.6, 1.2)
+                self.recalc_timer = 0
+            elif self.state == 'ALERT':
+                self.last_known_pos = (player.x, player.y)
+                self.alert_timer -= dt
+                if self.alert_timer <= 0:
+                    self.state = 'CHASE'
+                    self.recalc_timer = 0
+            elif self.state in ('CHASE', 'INVESTIGATE'):
+                self.state = 'CHASE'
+                self.last_known_pos = (player.x, player.y)
+        else:
+            if self.state == 'CHASE':
+                self.state = 'INVESTIGATE'
+                self.recalc_timer = 0
+
+        if self.state == 'INVESTIGATE' and self.last_known_pos:
+            d = math.hypot(self.last_known_pos[0] - self.x, self.last_known_pos[1] - self.y)
+            if d < maze.tile_size * 0.6:
+                self.state = 'PATROL'
+                self.last_known_pos = None
+                self.recalc_timer = 0
+
+        # --- Cálculo de Rota ---
+        if self.recalc_timer <= 0 or not self.path:
+            if self.state == 'CHASE':
+                self.path = self.get_path(player.x, player.y, maze)
+                self.recalc_timer = 0.25
+                self.speed = 250
+            elif self.state == 'ALERT':
+                self.speed = 0
+                self.vx = self.vy = 0
+            elif self.state == 'INVESTIGATE':
+                if self.last_known_pos:
+                    self.path = self.get_path(self.last_known_pos[0], self.last_known_pos[1], maze)
+                    self.recalc_timer = 1.0
+                    self.speed = 190
+            elif self.state == 'PATROL':
+                ox = self.x + random.randint(-maze.tile_size * 5, maze.tile_size * 5)
+                oy = self.y + random.randint(-maze.tile_size * 5, maze.tile_size * 5)
+                self.path = self.get_path(ox, oy, maze)
+                self.recalc_timer = 2.5
+                self.speed = 150
+            elif self.state == 'WANDER':
+                wx, wy = self._random_walkable_pos(maze)
+                self.path = self.get_path(wx, wy, maze)
+                self.recalc_timer = 4.0
+                self.speed = 90
+
+        # --- Execução de Movimento ---
+        if self.state == 'ALERT':
+            dx = player.x - self.x
+            dy = player.y - self.y
+            if abs(dx) > abs(dy):
+                self.direction = 'right' if dx > 0 else 'left'
+            else:
+                self.direction = 'down' if dy > 0 else 'up'
+            self.vx = self.vy = 0
+        elif self.state == 'CHASE' and self.path:
+            override = (player.x, player.y) if len(self.path) <= 1 else None
+            self._move_along_path(dt, maze, override)
+        elif self.state == 'INVESTIGATE' and self.path:
+            override = self.last_known_pos if len(self.path) <= 1 else None
+            self._move_along_path(dt, maze, override)
+        else:
+            self._move_along_path(dt, maze)
+
+        # Aplica velocidade e resolve colisões
+        self.x += self.vx * dt
+        self.y += self.vy * dt
+        self._resolve_collision(maze.wall_rects + maze.object_rects)
+
+        # Atualiza direção visual pelo vetor de movimento
+        if abs(self.vx) > 0.5 or abs(self.vy) > 0.5:
+            if abs(self.vx) >= abs(self.vy):
+                self.direction = 'right' if self.vx > 0 else 'left'
+            else:
+                self.direction = 'down' if self.vy > 0 else 'up'
+
+        # Animação do Troll
+        self._update_animation(dt)

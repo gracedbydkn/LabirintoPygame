@@ -37,13 +37,55 @@ class CharacterSprite:
             surf.blit(self.sheet, (0, 0), (x, y, self.frame_w, self.frame_h))
             frames.append(surf)
         return frames
-    
-def load_frames(pattern, count, size):
-    # Carrega uma sequência de frames a partir de um padrão de nome
-    # pattern: caminho com {} onde vai o índice  ex: "assets/itens/vaso-frame-{}.png"
-    # count:   número de frames
-    # size:    tupla (largura, altura) para escalar
 
+class TrollSprite:
+    def __init__(self, filepath, scale=1.5):
+        raw_sheet = pygame.image.load(filepath).convert_alpha()
+        w, h = raw_sheet.get_size()
+        self.sheet = pygame.transform.scale(raw_sheet, (int(w * scale), int(h * scale)))
+
+        self.scale   = scale
+        self.frame_w = int(72 * scale)
+        self.frame_h = int(72 * scale)
+
+        self.animations = {
+            # Idle com respiro (usado quando parado — 3 frames)
+            'idle_right': self._extract(0, 5, 3),
+            'idle_left':  self._extract(1, 5, 3),
+            'idle_down':  self._extract(2, 5, 3),
+            'idle_up':    self._extract(3, 5, 3),
+
+            # Walk (4 frames cada)
+            'left':  self._extract(1, 0, 4),
+            'right': self._extract(2, 0, 4),
+            'down':  self._extract(3, 0, 4),
+            'up':    self._extract(4, 0, 4),
+
+            # Attack
+            'attack_right': self._extract(5, 0, 3),
+            'attack_left':  self._extract(6, 0, 3),
+            'attack_down':  self._extract(7, 0, 2),
+            'attack_up':    self._extract(7, 2, 2),
+        }
+
+    def _extract(self, row, start_col, num_frames):
+        frames = []
+        for i in range(num_frames):
+            col = start_col + i
+            x = col * self.frame_w
+            y = row * self.frame_h
+            surf = pygame.Surface((self.frame_w, self.frame_h), pygame.SRCALPHA)
+            surf.blit(self.sheet, (0, 0), (x, y, self.frame_w, self.frame_h))
+            frames.append(surf)
+        return frames
+
+
+def load_frames(pattern, count, size):
+    """Carrega uma sequência de frames a partir de um padrão de nome.
+    pattern: caminho com {} onde vai o índice  ex: "assets/itens/vaso-frame-{}.png"
+    count:   número de frames
+    size:    tupla (largura, altura) para escalar
+    """
     return [
         pygame.transform.scale(
             pygame.image.load(pattern.format(i)).convert_alpha(),
