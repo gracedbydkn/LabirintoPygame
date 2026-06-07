@@ -50,10 +50,10 @@ class TrollSprite:
 
         self.animations = {
             # Idle com respiro (usado quando parado — 3 frames)
-            'idle_right': self._extract(0, 5, 3),
-            'idle_left':  self._extract(1, 5, 3),
-            'idle_down':  self._extract(2, 5, 3),
-            'idle_up':    self._extract(3, 5, 3),
+            'idle_right': self._extract(0, 4, 3),
+            'idle_left':  self._extract(1, 4, 3),
+            'idle_down':  self._extract(2, 4, 3),
+            'idle_up':    self._extract(3, 4, 3),
 
             # Walk (4 frames cada)
             'left':  self._extract(1, 0, 4),

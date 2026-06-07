@@ -138,6 +138,9 @@ class TrollEnemy(Actor):
         else:
             anim_key = f'idle_{self.direction}'     # 'idle_up' | 'idle_down' | etc.
 
+        if anim_key != self.current_animation:
+            self.frame_index = 0.0
+
         self.current_animation = anim_key
         frames = self.sprites.animations[anim_key]
         speed = self.anim_speed if self.moving else self.anim_speed_idle
