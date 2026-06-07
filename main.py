@@ -55,9 +55,11 @@ class Game:
         vaso_frames = load_frames("assets/itens/vaso-frame-{}.png", 4, vaso_size)
         chave_size = (int(ts * 0.8), int(ts * 0.8))
         chave_frames = load_spritesheet_row("assets/itens/key_32x32_24f.png", 24, 32, 32, chave_size)
-        runa_roxa_frames = load_frames("assets/itens/runa-roxa-{}.png", 2, (ts*4,ts*4))
+        runa_roxa_frames = load_frames("assets/itens/runa-roxa-{}.png", 1, (ts,ts))
+        runa_azul_frames = load_frames("assets/itens/runa-azul-{}.png", 1, (ts,ts))
+        barreira_azul_frames = load_frames("assets/itens/barreira-azul-{}.png", 3, (ts*4.5, ts*4.5) )
         barreira_roxa_frames = load_frames("assets/itens/barreira-roxa-{}.png", 3, (ts*4.5, ts*4.5) )
-        barril_frames = load_frames("assets/itens/barril-{}.png", 4, (ts*1.7, ts*1.7))
+        barril_frames = load_frames("assets/itens/barril-{}.png", 4, (ts*2, ts*2))
 
         self.env_frames = {
             "vaso": [vaso_frames[0]],
@@ -66,6 +68,8 @@ class Game:
             "torch": load_frames("assets/catacombs rogue fantasy/RF_Catacombs_v1.0/torch_{}.png", 4, (ts, ts)),
             "chave": chave_frames,
             "barreira_roxa": barreira_roxa_frames,
+            "barreira_azul": barreira_azul_frames,
+            "runa_azul": runa_azul_frames,
             "runa_roxa": runa_roxa_frames,
             "porta_saida": load_frames("assets/itens/porta_saida.png", 1, (ts*4, ts*4)),
             "barril": [barril_frames[0]],
@@ -95,13 +99,23 @@ class Game:
         self.player = Player(spawn_x, spawn_y, self.sprite_player, joystick=self.joystick)
 
         # Zumbi
-        enemy_x = 15.5 * self.maze.tile_size
-        enemy_y = 10.5 * self.maze.tile_size
+        try:
+            spawn_point = self.maze.tmx_data.get_object_by_name("start_enemy")
+            enemy_x = spawn_point.x * self.maze.scale
+            enemy_y = spawn_point.y * self.maze.scale
+        except Exception:
+            enemy_x = 15.5 * self.maze.tile_size
+            enemy_y = 10.5 * self.maze.tile_size
         self.enemy = EnemyAI(enemy_x, enemy_y, self.sprite_zumbi)
 
         # Troll
-        troll_x = 20.5 * self.maze.tile_size
-        troll_y = 10.5 * self.maze.tile_size
+        try:
+            spawn_point = self.maze.tmx_data.get_object_by_name("start_troll")
+            troll_x = spawn_point.x * self.maze.scale
+            troll_y = spawn_point.y * self.maze.scale
+        except Exception:
+            troll_x = 20.5 * self.maze.tile_size
+            troll_y = 10.5 * self.maze.tile_size
         self.troll = TrollEnemy(troll_x, troll_y, self.sprite_troll)
 
         sw, sh = self.screen.get_size()
