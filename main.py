@@ -18,6 +18,7 @@ from src.world.objects.vaso import Vaso
 from src.world.objects.barreira import Barreira
 from src.world.objects.porta_saida import PortaSaida
 from src.world.objects.esconderijo import Esconderijo
+from src.utils.hud import draw_hud as _draw_hud, draw_key_hints as _draw_key_hints, draw_ui_overlay as _draw_ui_overlay, carregar_teclas, carregar_assets_hud
 
 
 class Game:
@@ -65,7 +66,7 @@ class Game:
             "torch": load_frames("assets/catacombs rogue fantasy/RF_Catacombs_v1.0/torch_{}.png", 4, (ts, ts)),
             "chave": chave_frames,
             "barreira_roxa": barreira_roxa_frames,
-            "runa_roxa": [runa_roxa_frames],
+            "runa_roxa": runa_roxa_frames,
             "porta_saida": load_frames("assets/itens/porta_saida.png", 1, (ts*4, ts*4)),
             "barril": [barril_frames[0]],
             "barril_aberto": [barril_frames[1]],
@@ -74,7 +75,8 @@ class Game:
         }
         self.fog = FogOfWar()
         self.camera = pygame.Vector2(0, 0)
-        self.key_hints = self._carregar_teclas()
+        self.key_hints = carregar_teclas()
+        self.hud_assets = carregar_assets_hud()
         self.reset()
 
 
@@ -134,7 +136,7 @@ class Game:
                 frames = self.env_frames.get(data["name"])
                 if frames:
                     self.items.append(
-                        Item(data["x"], data["y"], data["name"], frames[0],)
+                        Item(data["x"], data["y"], data["name"], frames,)
                     )
             elif data["type"] == "porta_saida":
                 frames = self.env_frames.get("porta_saida")
@@ -154,63 +156,10 @@ class Game:
         print(f"world_objects: {[type(o).__name__ for o in self.world_objects]}")
     
 
-    def _carregar_tecla(self, nome, tamanho=(40, 40)):
-        try:
-            raw = pygame.image.load(f"assets/keyboard-keys/{nome}.png").convert_alpha()
-            rw, rh = raw.get_size()
-            fw = rw // 3
-            return [
-                pygame.transform.scale(raw.subsurface((i * fw, 0, fw, rh)), tamanho)
-                for i in range(3)
-            ]
-        except (FileNotFoundError, pygame.error):
-            return None
 
-    def _carregar_teclas(self):
-        nomes = ["E", "W", "A", "S", "D", "ARROWUP", "ARROWLEFT", "ARROWDOWN", "ARROWRIGHT"]
-        return {n: self._carregar_tecla(n) for n in nomes}
 
     def draw_key_hints(self):
-        # frame atual: normal (0) → pressionada (1) → subindo (2)
-        ciclo = self.time % 0.86
-        f = 0 if ciclo < 0.50 else (1 if ciclo < 0.68 else 2)
-
-        # Tecla E acima do objeto interagível mais próximo
-        alvo = self.player._get_objeto_proximo(self.world_objects, self.items)
-        pode_interagir = (
-            alvo and (
-                (isinstance(alvo, Item) and not alvo.dead)
-                or (hasattr(alvo, 'interactable') and alvo.interactable and alvo.interactable.enabled)
-            )
-        )
-        if not pode_interagir:
-            alvo = self.player._get_objeto_proximo([], self.items)
-            pode_interagir = bool(alvo)
-        frames = pode_interagir and self.key_hints.get("E")
-        if frames:
-            sx = int(alvo.x - self.camera.x)
-            sy = int(alvo.y - self.camera.y) - 100
-            frame = frames[f]
-            self.screen.blit(frame, (sx - frame.get_width() // 2, sy - frame.get_height() // 2))
-
-        # WASD / Setas após 5s parado — alterna a cada 3.5s
-        if self.player.idle_time >= 5.0 and not self.player.is_hidden:
-            sw, sh = self.screen.get_size()
-            setas = int(self.player.idle_time / 3.5) % 2 == 1
-            step = 44
-            cx, cy = sw // 2, sh - 72
-            teclas = (
-                [("ARROWUP", cx, cy - step), ("ARROWLEFT", cx - step, cy),
-                ("ARROWDOWN", cx, cy), ("ARROWRIGHT", cx + step, cy)]
-                if setas else
-                [("W", cx, cy - step), ("A", cx - step, cy),
-                ("S", cx, cy), ("D", cx + step, cy)]
-            )
-            for nome, x, y in teclas:
-                frames = self.key_hints.get(nome)
-                if frames:
-                    frame = frames[f]
-                    self.screen.blit(frame, (x - frame.get_width() // 2, y - frame.get_height() // 2))
+        _draw_key_hints(self.screen, self.player, self.world_objects, self.items, self.key_hints, self.camera, self.time)
 
     def check_conditions(self):
         px_grid = int(self.player.x // self.maze.tile_size)
@@ -229,40 +178,10 @@ class Game:
             self.won = True
 
     def draw_ui_overlay(self, title, color, bg_color):
-        sw, sh = self.screen.get_size()
-        ov = pygame.Surface((sw, sh), pygame.SRCALPHA)
-        ov.fill(bg_color)
-        self.screen.blit(ov, (0,0))
-        txt_title = self.font_lg.render(title, True, color)
-        txt_sub = self.font_sm.render("R = Tentar Novamente  •  ESC = Sair", True, C_HUD_TEXT)
-        self.screen.blit(txt_title, txt_title.get_rect(center=(sw//2, sh//2 - 20)))
-        self.screen.blit(txt_sub, txt_sub.get_rect(center=(sw//2, sh//2 + 30)))
+        _draw_ui_overlay(self.screen, self.font_lg, self.font_sm, title, color, bg_color, C_HUD_TEXT)
 
     def draw_hud(self):
-        # Configurações da barra de stamina
-        bar_width = 200
-        bar_height = 15
-        x_pos = 20
-        y_pos = 20
-
-        # Cores (muda para vermelho se estiver exausto)
-        bg_color = (50, 50, 50, 180)
-        stamina_color = (150, 50, 50) if self.player.exhausted else (50, 150, 50)
-
-        # Calcula a porcentagem de stamina atual
-        fill_width = int((self.player.stamina / self.player.max_stamina) * bar_width)
-
-        # Fundo da barra
-        pygame.draw.rect(self.screen, bg_color, (x_pos, y_pos, bar_width, bar_height))
-        # Preenchimento da barra
-        pygame.draw.rect(self.screen, stamina_color, (x_pos, y_pos, fill_width, bar_height))
-        # Borda
-        pygame.draw.rect(self.screen, (200, 200, 200), (x_pos, y_pos, bar_width, bar_height), 2)
-
-        # FPS
-        fps = int(self.clock.get_fps())
-        cor = (100, 220, 100) if fps >= 55 else (255, 200, 0) if fps >= 30 else (255, 80, 80)
-        self.screen.blit(self.font_sm.render(f"FPS: {fps}", True, cor), (x_pos, y_pos + bar_height + 6))
+        _draw_hud(self.screen, self.clock, self.player, self.font_sm, self.env_frames, self.hud_assets)
 
     def run(self):
         while True:
