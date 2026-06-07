@@ -5,11 +5,12 @@
 import pygame
 import sys
 from src.core.config import *
-from src.utils.sprites import CharacterSprite, load_frames, load_spritesheet_row
+from src.utils.sprites import CharacterSprite, TrollSprite, load_frames, load_spritesheet_row
 from src.world.maze import Maze
 from src.world.fog import FogOfWar
 from src.world.entities.player import Player
 from src.world.entities.enemy import EnemyAI
+from src.world.entities.troll_enemy import TrollEnemy
 from src.world.env_object import EnvObject
 from src.world.entities.world_object import WorldObject
 from src.world.entities.item import Item
@@ -32,7 +33,6 @@ class Game:
         else:
             print("Nenhum controle encontrado")
 
-        
         self.screen = pygame.display.set_mode((INIT_SCREEN_W, INIT_SCREEN_H), pygame.RESIZABLE)
         pygame.display.set_caption("Masmorra Dark Fantasy")
         self.clock = pygame.time.Clock()
@@ -41,7 +41,8 @@ class Game:
         
         try:
             self.sprite_player = CharacterSprite("assets/characters/player-spritesheet.png")
-            self.sprite_zumbi = CharacterSprite("assets/characters/zumbi-spritesheet.png")
+            self.sprite_zumbi  = CharacterSprite("assets/characters/zumbi-spritesheet.png")
+            self.sprite_troll  = TrollSprite("assets/characters/Troll.png")
         except FileNotFoundError:
             print("Erro: Imagem não encontrada.")
             sys.exit(1)
@@ -90,10 +91,17 @@ class Game:
             spawn_y = 8.5 * self.maze.tile_size
             
         self.player = Player(spawn_x, spawn_y, self.sprite_player, joystick=self.joystick)
+
+        # Zumbi
         enemy_x = 15.5 * self.maze.tile_size
         enemy_y = 10.5 * self.maze.tile_size
         self.enemy = EnemyAI(enemy_x, enemy_y, self.sprite_zumbi)
-        
+
+        # Troll
+        troll_x = 20.5 * self.maze.tile_size
+        troll_y = 10.5 * self.maze.tile_size
+        self.troll = TrollEnemy(troll_x, troll_y, self.sprite_troll)
+
         sw, sh = self.screen.get_size()
         self.camera.x = self.player.x - sw / 2
         self.camera.y = self.player.y - sh / 2
@@ -105,6 +113,7 @@ class Game:
         self.env_objects = []
 
         for data in self.maze.env_object_data:
+            print(f"objeto: name={data['name']}, type={data['type']}")
             if data["type"] == "vaso":
                 frames   = self.env_frames.get("vaso")
                 frames_h = self.env_frames.get("vaso_highlight")
@@ -185,7 +194,7 @@ class Game:
             self.screen.blit(frame, (sx - frame.get_width() // 2, sy - frame.get_height() // 2))
 
         # WASD / Setas após 5s parado — alterna a cada 3.5s
-        if self.player.idle_time >= 5.0:
+        if self.player.idle_time >= 5.0 and not self.player.is_hidden:
             sw, sh = self.screen.get_size()
             setas = int(self.player.idle_time / 3.5) % 2 == 1
             step = 44
@@ -202,18 +211,18 @@ class Game:
                 if frames:
                     frame = frames[f]
                     self.screen.blit(frame, (x - frame.get_width() // 2, y - frame.get_height() // 2))
-            
 
     def check_conditions(self):
         px_grid = int(self.player.x // self.maze.tile_size)
         py_grid = int(self.player.y // self.maze.tile_size)
         tile_value = self.maze.get_tile_value(px_grid, py_grid)
         
-        # Condição de Derrota
+        # Derrota — checa contra todos os inimigos
         if not self.player.is_hidden:
-            dist_to_enemy = ((self.player.x - self.enemy.x)**2 + (self.player.y - self.enemy.y)**2)**0.5
-            if dist_to_enemy < 20:
-                self.game_over = True
+            for inimigo in [self.enemy, self.troll]:
+                dist = ((self.player.x - inimigo.x)**2 + (self.player.y - inimigo.y)**2)**0.5
+                if dist < 20:
+                    self.game_over = True
 
         # Condição de Vitória (Se o player passar pela porta final, ele ganha)
         if self.player.venceu:
@@ -224,10 +233,8 @@ class Game:
         ov = pygame.Surface((sw, sh), pygame.SRCALPHA)
         ov.fill(bg_color)
         self.screen.blit(ov, (0,0))
-        
         txt_title = self.font_lg.render(title, True, color)
         txt_sub = self.font_sm.render("R = Tentar Novamente  •  ESC = Sair", True, C_HUD_TEXT)
-        
         self.screen.blit(txt_title, txt_title.get_rect(center=(sw//2, sh//2 - 20)))
         self.screen.blit(txt_sub, txt_sub.get_rect(center=(sw//2, sh//2 + 30)))
 
@@ -237,14 +244,14 @@ class Game:
         bar_height = 15
         x_pos = 20
         y_pos = 20
-        
+
         # Cores (muda para vermelho se estiver exausto)
         bg_color = (50, 50, 50, 180)
         stamina_color = (150, 50, 50) if self.player.exhausted else (50, 150, 50)
-        
+
         # Calcula a porcentagem de stamina atual
         fill_width = int((self.player.stamina / self.player.max_stamina) * bar_width)
-        
+
         # Fundo da barra
         pygame.draw.rect(self.screen, bg_color, (x_pos, y_pos, bar_width, bar_height))
         # Preenchimento da barra
@@ -274,18 +281,19 @@ class Game:
                         self.reset()
                     if event.key == pygame.K_e:
                         self.player.interagir(self.world_objects, self.items)
-                        
+                
                 # Gamepad — botões
                 if event.type == pygame.JOYBUTTONDOWN:
-                    if event.button == 0:  # A (Xbox) / Cruz (PS)
+                    if event.button == 0: # A (Xbox) / Cruz (PS)
                         self.player.interagir(self.world_objects, self.items)
 
             self.player.handle_input()
             
-            self.maze.object_rects =[obj.rect for obj in self.world_objects if obj.solid]
+            self.maze.object_rects = [obj.rect for obj in self.world_objects if obj.solid]
             if not self.game_over and not self.won:
-                self.player.update(dt, self.maze.wall_rects+self.maze.object_rects)
+                self.player.update(dt, self.maze.wall_rects + self.maze.object_rects)
                 self.enemy.update(dt, self.player, self.maze)
+                self.troll.update(dt, self.player, self.maze)
 
                 for obj in self.env_objects:
                     obj.update(dt)
@@ -295,7 +303,6 @@ class Game:
                     else:
                         obj.highlighted = False
                         obj.update(dt)
-                   
                 for item in self.items:
                     item.update(dt)
                 alvo = self.player._get_objeto_proximo(self.world_objects, self.items)
@@ -326,7 +333,7 @@ class Game:
             
             # Entidades e objetos de ambiente ordenados por Y para depth sorting correto
             drawables = ([] if self.player.is_hidden else [self.player])
-            drawables += [self.enemy] + self.env_objects + self.world_objects + self.items
+            drawables += [self.enemy, self.troll] + self.env_objects + self.world_objects + self.items  # +troll
             drawables.sort(key=lambda e: e.y)
             for e in drawables:
                 e.draw(self.screen, self.camera)

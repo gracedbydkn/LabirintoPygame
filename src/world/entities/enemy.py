@@ -35,6 +35,7 @@ class EnemyAI(Actor):
 
         # Tempo que o inimigo fica em alerta antes de partir para perseguição
         self.alert_timer = 0.0
+        self.investigate_elapsed = 0.0
 
     def has_line_of_sight(self, target_x, target_y, maze):
         """Verifica se há linha de visão direta entre o inimigo e o alvo,
@@ -75,10 +76,22 @@ class EnemyAI(Actor):
         dot = (dx / dist) * fx + (dy / dist) * fy
         return dot > 0.5
 
-    def get_path(self, target_x, target_y, maze):
+    def get_path(self, target_x, target_y, maze, extra_blocked=None):
         """Calcula um caminho A* do inimigo até a posição alvo.
         Converte a matrix do labirinto para o formato do pathfinding (1=caminhável, 0=parede)."""
         pf_matrix = [[1 if cell != 1 else 0 for cell in row] for row in maze.matrix]
+
+        # Marca tiles de objetos sólidos do Object Layer como não-caminháveis
+        for rect in (extra_blocked or []):
+            gx1 = max(0, rect.left   // maze.tile_size)
+            gy1 = max(0, rect.top    // maze.tile_size)
+            gx2 = min(maze.cols - 1, (rect.right  - 1) // maze.tile_size)
+            gy2 = min(maze.rows - 1, (rect.bottom - 1) // maze.tile_size)
+            for gy in range(gy1, gy2 + 1):
+                for gx in range(gx1, gx2 + 1):
+                    if 0 <= gy < maze.rows and 0 <= gx < maze.cols:
+                        pf_matrix[gy][gx] = 0
+
         grid = Grid(matrix=pf_matrix)
 
         # Converte posições em pixels para coordenadas de grid, com clamping nos limites
@@ -183,6 +196,7 @@ class EnemyAI(Actor):
             # Jogador se escondeu: interrompe perseguição e vai investigar
             if self.state in ('CHASE', 'ALERT'):
                 self.state = 'INVESTIGATE'
+                self.investigate_elapsed = 0.0
                 self.recalc_timer = 0
 
         elif can_see_player:
@@ -210,21 +224,36 @@ class EnemyAI(Actor):
             # Perdeu o jogador de vista durante a perseguição
             if self.state == 'CHASE':
                 self.state = 'INVESTIGATE'
+                self.investigate_elapsed = 0.0
                 self.recalc_timer = 0
 
         # INVESTIGATE: verifica se chegou na última posição conhecida do jogador
         if self.state == 'INVESTIGATE' and self.last_known_pos:
+            self.investigate_elapsed += dt
             d = math.hypot(self.last_known_pos[0] - self.x, self.last_known_pos[1] - self.y)
-            if d < maze.tile_size * 0.6:
-                # Chegou no ponto — jogador não está aqui, entra em patrulha
+
+            # Caminho esgotado = inimigo chegou ao ponto alcançável mais próximo
+            path_consumed = not self.path
+            # Limiar que cobre tiles bloqueados por objetos
+            close_enough = d < maze.tile_size * 1.2
+            # Fallback: desiste após 6 s sem encontrar o jogador
+            timed_out = self.investigate_elapsed > 6.0
+
+            if (close_enough and self.investigate_elapsed > 1.0) \
+            or (path_consumed and self.investigate_elapsed > 2.0) \
+            or timed_out:
                 self.state = 'PATROL'
                 self.last_known_pos = None
+                self.investigate_elapsed = 0.0
                 self.recalc_timer = 0
+
+        # Objetos sólidos do mapa repassados ao pathfinding para desvio
+        extra_blocked = getattr(maze, 'object_rects', [])
 
         # --- Cálculo de Rota (recalcula quando o timer zera ou o caminho acaba) ---
         if self.recalc_timer <= 0 or not self.path:
             if self.state == 'CHASE':
-                self.path = self.get_path(player.x, player.y, maze)
+                self.path = self.get_path(player.x, player.y, maze, extra_blocked)
                 self.recalc_timer = 0.25   # Recalcula frequentemente para seguir o jogador
                 self.speed = 250           # Velocidade máxima
 
@@ -235,7 +264,7 @@ class EnemyAI(Actor):
 
             elif self.state == 'INVESTIGATE':
                 if self.last_known_pos:
-                    self.path = self.get_path(self.last_known_pos[0], self.last_known_pos[1], maze)
+                    self.path = self.get_path(self.last_known_pos[0], self.last_known_pos[1], maze, extra_blocked)
                     self.recalc_timer = 1.0
                     self.speed = 190
 
@@ -243,14 +272,14 @@ class EnemyAI(Actor):
                 # Anda aleatoriamente em torno da área onde viu o jogador
                 ox = self.x + random.randint(-maze.tile_size * 5, maze.tile_size * 5)
                 oy = self.y + random.randint(-maze.tile_size * 5, maze.tile_size * 5)
-                self.path = self.get_path(ox, oy, maze)
+                self.path = self.get_path(ox, oy, maze, extra_blocked)
                 self.recalc_timer = 2.5
                 self.speed = 150
 
             elif self.state == 'WANDER':
                 # Vagueia aleatoriamente pelo mapa em velocidade baixa
                 wx, wy = self._random_walkable_pos(maze)
-                self.path = self.get_path(wx, wy, maze)
+                self.path = self.get_path(wx, wy, maze, extra_blocked)
                 self.recalc_timer = 4.0
                 self.speed = 90
 
