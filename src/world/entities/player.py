@@ -66,9 +66,13 @@ class Player(Actor):
     def interagir(self, world_objects, items):
         from .item import Item
         from .world_object import WorldObject
-
+        if self.is_hidden:
+            if self.esconderijo_atual:
+                self.esconderijo_atual.interactable.interact(self)
+            return
         # Para WorldObjects: exige estar olhando na direção (ex: quebrar vaso)
-        alvo_objeto = self._get_objeto_a_frente(world_objects, [])
+        alvo_objeto = self._get_objeto_proximo(world_objects, [])
+        print(f"alvo encontrado: {alvo_objeto}")
         if alvo_objeto and isinstance(alvo_objeto, WorldObject) and alvo_objeto.interactable:
             alvo_objeto.interactable.interact(self)
             return
@@ -79,6 +83,11 @@ class Player(Actor):
             alvo_item.collect(self)
 
     def handle_input(self):
+        if self.is_hidden:
+            # Se estiver escondido, não deve se mover mesmo que haja input, e a direção visual não deve mudar.
+            self.vx = 0
+            self.vy = 0
+            return
         keys = pygame.key.get_pressed()
         vx, vy = 0.0, 0.0
         
@@ -126,11 +135,6 @@ class Player(Actor):
         self.vx = direcao.x * self.speed
         self.vy = direcao.y * self.speed
 
-        if self.is_hidden:
-            # Se estiver escondido, não deve se mover mesmo que haja input, e a direção visual não deve mudar.
-            self.vx = 0
-            self.vy = 0
-            return
 
     def update(self, dt, walls):
         """Atualiza posição, colisão, direção e animação do jogador a cada frame.""" 

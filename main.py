@@ -111,7 +111,7 @@ class Game:
                 frames_h = self.env_frames.get("vaso_highlight")
                 frames_q = self.env_frames.get("vaso_quebrado")
                 if frames and frames_h and frames_q:
-                    self.world_objects.append(Vaso(data["x"], data["y"], frames, frames_h, frames_q, loot_type=data["chave"]))
+                    self.world_objects.append(Vaso(data["x"], data["y"], frames, frames_h, frames_q, loot_type=data["loot"]))
             elif data["type"] == "torch":
                 frames = self.env_frames.get(data["type"])
                 if frames:
@@ -143,6 +143,7 @@ class Game:
                     self.world_objects.append(
                         Esconderijo(data["x"], data["y"], frames, frames_a, frames_p, frames_h)
                     )
+        print(f"world_objects: {[type(o).__name__ for o in self.world_objects]}")
     
 
     def _carregar_tecla(self, nome, tamanho=(40, 40)):
@@ -209,13 +210,11 @@ class Game:
         py_grid = int(self.player.y // self.maze.tile_size)
         tile_value = self.maze.get_tile_value(px_grid, py_grid)
         
-        # Se for 3, é esconderijo
-        self.player.is_hidden = (tile_value == 3)
-
         # Condição de Derrota
-        dist_to_enemy = ((self.player.x - self.enemy.x)**2 + (self.player.y - self.enemy.y)**2)**0.5
-        if dist_to_enemy < 20:
-            self.game_over = True
+        if not self.player.is_hidden:
+            dist_to_enemy = ((self.player.x - self.enemy.x)**2 + (self.player.y - self.enemy.y)**2)**0.5
+            if dist_to_enemy < 20:
+                self.game_over = True
 
         # Condição de Vitória (Se o player passar pela porta final, ele ganha)
         if self.player.venceu:
@@ -253,6 +252,11 @@ class Game:
         pygame.draw.rect(self.screen, stamina_color, (x_pos, y_pos, fill_width, bar_height))
         # Borda
         pygame.draw.rect(self.screen, (200, 200, 200), (x_pos, y_pos, bar_width, bar_height), 2)
+
+        # FPS
+        fps = int(self.clock.get_fps())
+        cor = (100, 220, 100) if fps >= 55 else (255, 200, 0) if fps >= 30 else (255, 80, 80)
+        self.screen.blit(self.font_sm.render(f"FPS: {fps}", True, cor), (x_pos, y_pos + bar_height + 6))
 
     def run(self):
         while True:
@@ -328,6 +332,12 @@ class Game:
             for e in drawables:
                 e.draw(self.screen, self.camera)
                 self.maze.draw_top(self.screen, self.camera)
+            
+            for obj in self.world_objects:
+                r = obj.rect
+                pygame.draw.rect(self.screen, (255, 0, 0),
+                    pygame.Rect(r.x - self.camera.x, r.y - self.camera.y, r.w, r.h), 2)
+
             if not self.won:
                 tochas = [(obj.x, obj.y) for obj in self.env_objects]
                 self.fog.draw(self.screen, self.player.x, self.player.y, self.camera, self.time, self.maze, tochas)

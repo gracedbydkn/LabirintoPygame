@@ -1,11 +1,20 @@
 # src/world/objects/vaso.py
 
+import pygame
 from src.world.entities.world_object import WorldObject
 from src.world.entities.interactable import Interactable
 
 class Vaso(WorldObject):
     def __init__(self, x, y, frames, frames_highlight, frames_quebrado, loot_type=None):
         super().__init__(x, y, frames)
+        colisao_w = 40
+        colisao_h = 40
+        self.rect = pygame.Rect(
+            self.x - colisao_w // 2,
+            self.y - colisao_h,
+            colisao_w,
+            colisao_h
+        )
         self.frames_highlight = frames_highlight
         self.frames_quebrado = frames_quebrado
         self.loot_type = loot_type
