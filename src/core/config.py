@@ -10,7 +10,7 @@ FPS = 60
 # --- Configurações de Visão (Fog of War) ---
 
 # Raio em pixels da área circular ao redor iluminada
-FOV_RADIUS = 350
+FOV_RADIUS = 300
 TORCH_FOV_RADIUS  = 140
 
 # Número de raios lançados para calcular o campo de visão (um por grau = 360°)

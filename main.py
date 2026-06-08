@@ -270,7 +270,7 @@ class Game:
             drawables.sort(key=lambda e: e.y)
             for e in drawables:
                 e.draw(self.screen, self.camera)
-                self.maze.draw_top(self.screen, self.camera)
+            self.maze.draw_top(self.screen, self.camera)
             
             for obj in self.world_objects:
                 r = obj.rect
@@ -286,9 +286,9 @@ class Game:
             self.draw_key_hints()
                 
             if self.game_over:
-                self.draw_ui_overlay("VOCÊ FOI PEGO!", (255, 50, 50), (60, 0, 0, 180))
+                self.draw_ui_overlay("DIFÍCIL? EU ACHEI", (255, 50, 50), (60, 0, 0, 180))
             elif self.won:
-                self.draw_ui_overlay("VOCÊ ESCAPOU!", C_EXIT, (10, 30, 10, 180))
+                self.draw_ui_overlay("FÁCIL? EXTREMAMENTE FÁCIL!", C_EXIT, (10, 30, 10, 180))
 
             pygame.display.flip()
 
