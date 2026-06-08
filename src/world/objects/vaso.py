@@ -5,7 +5,7 @@ from src.world.entities.world_object import WorldObject
 from src.world.entities.interactable import Interactable
 
 class Vaso(WorldObject):
-    def __init__(self, x, y, frames, frames_highlight, frames_quebrado, loot_type=None):
+    def __init__(self, x, y, frames, frames_highlight, frames_quebrado, loot_type=None, on_break=None):
         super().__init__(x, y, frames)
         colisao_w = 40
         colisao_h = 40
@@ -23,6 +23,7 @@ class Vaso(WorldObject):
             on_interact=self._quebrar,
             prompt="Quebrar"
         )
+        self.on_break = on_break
     
     def draw(self, surface, camera):
         if self.broken:
@@ -48,3 +49,6 @@ class Vaso(WorldObject):
         
         self.broken = True
         self.interactable.enabled = False
+
+        if self.on_break:
+            self.on_break(self.x, self.y)
