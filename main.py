@@ -195,7 +195,7 @@ class Game:
         _draw_ui_overlay(self.screen, self.font_lg, self.font_sm, title, color, bg_color, C_HUD_TEXT)
 
     def draw_hud(self):
-        _draw_hud(self.screen, self.clock, self.player, self.font_sm, self.env_frames, self.hud_assets)
+        _draw_hud(self.screen, self.clock, self.player, self.font_sm, self.env_frames, self.hud_assets, self.camera)
 
     def run(self):
         while True:

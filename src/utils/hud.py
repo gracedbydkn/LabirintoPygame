@@ -107,33 +107,34 @@ def draw_ui_overlay(screen, font_lg, font_sm, title, color, bg_color, hud_text_c
 # HUD principal
 # ---------------------------------------------------------------------------
 
-def draw_hud(screen, clock, player, font_sm, env_frames, hud_assets):
+def draw_hud(screen, clock, player, font_sm, env_frames, hud_assets, camera):
     sw, sh = screen.get_size()
     margin = 16
 
     # ── Barra de Stamina ────────────────────────────────────────────────────
     if player.is_running or player.stamina < player.max_stamina:
-        bar_w = 150  # Largura da barra
-        bar_h = 13   # Altura (bem fina e minimalista)
+        bar_w = 40  # Largura da barra
+        bar_h = 8   # Altura (bem fina e minimalista)
         
-        # Centraliza a barra horizontalmente e a posiciona perto do fundo da tela
-        bar_x = (sw - bar_w) // 2
-        bar_y = sh - margin - 80
+        # Converte a posição do mundo para a posição da tela usando a câmera.
+        # DICA: Ajuste o "+ 35" para mais ou para menos dependendo da altura real do seu sprite
+        px = int(player.x - camera.x) - bar_w // 2
+        py = int(player.y - camera.y) + 35 
         
         stamina_pct = player.stamina / player.max_stamina
         fill_w = int(stamina_pct * bar_w)
         
-        # 1. Fundo da barra
-        pygame.draw.rect(screen, (30, 30, 30), (bar_x, bar_y, bar_w, bar_h))
+        # 1. Fundo da barra (um cinza escuro para dar contraste no escuro)
+        pygame.draw.rect(screen, (30, 30, 30), (px, py, bar_w, bar_h))
         
         # 2. Preenchimento da barra
         if fill_w > 0:
             # Fica vermelha se o jogador esgotar o fôlego, senão fica branca
             cor_fill = (200, 50, 50) if player.exhausted else (240, 240, 240)
-            pygame.draw.rect(screen, cor_fill, (bar_x, bar_y, fill_w, bar_h))
+            pygame.draw.rect(screen, cor_fill, (px, py, fill_w, bar_h))
             
         # 3. Borda preta fina para destacar em fundos claros
-        pygame.draw.rect(screen, (0, 0, 0), (bar_x, bar_y, bar_w, bar_h), 1)
+        pygame.draw.rect(screen, (0, 0, 0), (px, py, bar_w, bar_h), 1)
 
     # FPS abaixo da barra
     fps = int(clock.get_fps())
