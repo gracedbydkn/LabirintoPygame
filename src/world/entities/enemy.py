@@ -242,7 +242,7 @@ class EnemyAI(Actor):
             # Fallback: desiste após 6 s sem encontrar o jogador
             timed_out = self.investigate_elapsed > 6.0
 
-            tempo_espera = 4.0 if close_enough else 1.5
+            tempo_espera = 3.0 if close_enough else 1.5
 
             if (close_enough and self.investigate_elapsed > tempo_espera) \
             or (path_consumed and self.investigate_elapsed > 2.0) \
