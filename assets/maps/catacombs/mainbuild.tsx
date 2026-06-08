@@ -374,9 +374,7 @@
  </tile>
  <tile id="798">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="8" y="10" width="8" height="6">
-    <polygon points="0.00434028,1.01172 1.00352,1.0066 0.994878,0.0131944 3.77778,0 8,0 8,6 0,6"/>
-   </object>
+   <object id="2" x="8" y="10" width="8" height="6"/>
   </objectgroup>
  </tile>
  <tile id="799">
@@ -401,9 +399,7 @@
  </tile>
  <tile id="803">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="7.99236" y="10.0014" width="8" height="6">
-    <polygon points="-0.00434028,1.01172 -1.00352,1.0066 -0.994878,0.0131944 -3.77778,0 -8,0 -8,6 0,6"/>
-   </object>
+   <object id="2" x="0" y="10" width="8" height="6"/>
   </objectgroup>
  </tile>
  <tile id="835">
@@ -628,9 +624,7 @@
  </tile>
  <tile id="1123">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="8.98047" y="0.0117188">
-    <polygon points="0.0234375,0 -8.98047,-0.0117188 -8.98047,7.98438 -7.98047,7.98438 -7.97656,8.98047 -2.98438,8.98438 -2.98438,7.98438 -0.984375,7.98438 -0.988281,6.98828 0.0195313,6.98047"/>
-   </object>
+   <object id="1" x="0" y="0" width="9" height="9"/>
   </objectgroup>
  </tile>
  <tile id="1126">
