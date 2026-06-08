@@ -84,6 +84,9 @@ class Game:
         self.key_hints = carregar_teclas()
         self.hud_assets = carregar_assets_hud()
         self.audio = AudioManager(sfx_volume=0.8, ambient_volume=0.4)
+        self.audio.load_sfx("vaso_quebrar", "assets/audio/sfx/soundvaso.mp3")
+        # self.audio.load_ambient("assets/audio/ambient/dungeon_ambient.ogg")
+        # self.audio.play_ambient()
         self.reset()
 
 
@@ -203,6 +206,7 @@ class Game:
         _draw_hud(self.screen, self.clock, self.player, self.font_sm, self.env_frames, self.hud_assets, self.camera)
 
     def _on_vaso_quebrado(self, x, y):
+        self.audio.play_sfx("vaso_quebrar")
         """Notifica o inimigo mais próximo do som, dentro do raio de audição."""
         raio_px = SOUND_RADIUS_TILES * self.maze.tile_size
         print(f"[SOUND EVENT] Vaso quebrado em ({x:.0f}, {y:.0f}) | Raio: {raio_px}px ({SOUND_RADIUS_TILES} tiles)")
@@ -210,7 +214,7 @@ class Game:
         inimigos = [self.enemy, self.troll]
         candidatos = []
 
-        for inimigo in inimigos:
+        for inimigo in inimigos:    
             dist = ((inimigo.x - x)**2 + (inimigo.y - y)**2) ** 0.5
             print(f"[SOUND EVENT] {type(inimigo).__name__} está a {dist:.0f}px do som")
             if dist <= raio_px:
