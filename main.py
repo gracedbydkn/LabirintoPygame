@@ -19,7 +19,7 @@ from src.world.objects.barreira import Barreira
 from src.world.objects.porta_saida import PortaSaida
 from src.world.objects.esconderijo import Esconderijo
 from src.utils.hud import draw_hud as _draw_hud, draw_key_hints as _draw_key_hints, draw_ui_overlay as _draw_ui_overlay, carregar_teclas, carregar_assets_hud
-
+from src.core.audio_manager import AudioManager
 
 class Game:
     def __init__(self):
@@ -81,6 +81,7 @@ class Game:
         self.camera = pygame.Vector2(0, 0)
         self.key_hints = carregar_teclas()
         self.hud_assets = carregar_assets_hud()
+        self.audio = AudioManager(sfx_volume=0.8, ambient_volume=0.4)
         self.reset()
 
 
