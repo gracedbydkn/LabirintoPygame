@@ -34,10 +34,6 @@ def carregar_assets_hud():
         assets["portrait_frame"] = pygame.image.load("assets/itens/portrait_frame.png").convert_alpha()
     except (FileNotFoundError, pygame.error):
         assets["portrait_frame"] = None
-    try:
-        assets["stamina_bar"] = pygame.image.load("assets/itens/stamina_bar.png").convert_alpha()
-    except (FileNotFoundError, pygame.error):
-        assets["stamina_bar"] = None
     return assets
 
 
@@ -111,71 +107,38 @@ def draw_ui_overlay(screen, font_lg, font_sm, title, color, bg_color, hud_text_c
 # HUD principal
 # ---------------------------------------------------------------------------
 
-# Estrutura do asset stamina_bar.png (95x17):
-#   Decoração lateral esquerda : cols  0 –  6  (7px)
-#   Área interna preenchível   : cols  7 – 86  (80px)
-#   Decoração lateral direita  : cols 87 – 94  (8px)
-#   Decoração topo/base        : rows 0-2 e 13-16
-#   Área interna vertical      : rows 3 – 12   (10px)
-
-_BAR_SRC_W      = 95   # largura total do asset
-_BAR_SRC_H      = 17   # altura total do asset
-_BAR_INNER_X    = 7    # inicio da área interna (cols)
-_BAR_INNER_W    = 80   # largura da área interna
-_BAR_INNER_Y    = 3    # inicio da área interna (rows)
-_BAR_INNER_H    = 10   # altura da área interna
-_BAR_SCALE      = 3    # escala de renderização
-
-
 def draw_hud(screen, clock, player, font_sm, env_frames, hud_assets):
     sw, sh = screen.get_size()
     margin = 16
 
     # ── Barra de Stamina ────────────────────────────────────────────────────
-    SCALE   = _BAR_SCALE
-    bar_img = hud_assets.get("stamina_bar")
-
-    bar_render_w = _BAR_SRC_W * SCALE
-    bar_render_h = _BAR_SRC_H * SCALE
-    bar_x = margin
-    bar_y = margin
-
-    # Posição e tamanho da área interna já escalada
-    inner_x = bar_x + _BAR_INNER_X * SCALE
-    inner_y = bar_y + _BAR_INNER_Y * SCALE
-    inner_w = _BAR_INNER_W * SCALE
-    inner_h = _BAR_INNER_H * SCALE
-
-    stamina_pct = player.stamina / player.max_stamina
-    fill_w      = int(stamina_pct * inner_w)
-
-    if bar_img:
-        # 1. Fundo escuro na área interna
-        bg = pygame.Surface((inner_w, inner_h), pygame.SRCALPHA)
-        bg.fill((10, 5, 5, 220))
-        screen.blit(bg, (inner_x, inner_y))
-
-        # 2. Preenchimento da stamina
+    if player.is_running or player.stamina < player.max_stamina:
+        bar_w = 150  # Largura da barra
+        bar_h = 13   # Altura (bem fina e minimalista)
+        
+        # Centraliza a barra horizontalmente e a posiciona perto do fundo da tela
+        bar_x = (sw - bar_w) // 2
+        bar_y = sh - margin - 80
+        
+        stamina_pct = player.stamina / player.max_stamina
+        fill_w = int(stamina_pct * bar_w)
+        
+        # 1. Fundo da barra
+        pygame.draw.rect(screen, (30, 30, 30), (bar_x, bar_y, bar_w, bar_h))
+        
+        # 2. Preenchimento da barra
         if fill_w > 0:
-            fill_color = (140, 40, 40) if player.exhausted else (40, 170, 40)
-            fill_surf = pygame.Surface((fill_w, inner_h), pygame.SRCALPHA)
-            fill_surf.fill(fill_color)
-            screen.blit(fill_surf, (inner_x, inner_y))
-
-        # 3. Overlay do asset da barra (decoração por cima)
-        bar_scaled = pygame.transform.scale(bar_img, (bar_render_w, bar_render_h))
-        screen.blit(bar_scaled, (bar_x, bar_y))
-    else:
-        # Fallback sem asset
-        pygame.draw.rect(screen, (30, 30, 30), (bar_x, bar_y, inner_w, inner_h))
-        fill_color = (140, 40, 40) if player.exhausted else (40, 170, 40)
-        pygame.draw.rect(screen, fill_color, (bar_x, bar_y, fill_w, inner_h))
-        pygame.draw.rect(screen, (200, 200, 200), (bar_x, bar_y, inner_w, inner_h), 2)
+            # Fica vermelha se o jogador esgotar o fôlego, senão fica branca
+            cor_fill = (200, 50, 50) if player.exhausted else (240, 240, 240)
+            pygame.draw.rect(screen, cor_fill, (bar_x, bar_y, fill_w, bar_h))
+            
+        # 3. Borda preta fina para destacar em fundos claros
+        pygame.draw.rect(screen, (0, 0, 0), (bar_x, bar_y, bar_w, bar_h), 1)
 
     # FPS abaixo da barra
     fps = int(clock.get_fps())
     cor = (100, 220, 100) if fps >= 55 else (255, 200, 0) if fps >= 30 else (255, 80, 80)
-    screen.blit(font_sm.render(f"FPS: {fps}", True, cor), (bar_x, bar_y + bar_render_h + 4))
+    screen.blit(font_sm.render(f"FPS: {fps}", True, cor), (margin, margin))
 
     # ── Inventário com portrait_frame ────────────────────────────────────────
     inventario = player.inventory.listar()

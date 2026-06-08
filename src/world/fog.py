@@ -50,7 +50,7 @@ class FogOfWar:
             ratio = r / radius
             t = ratio * ratio * (3 - 2 * ratio)
             b = 1 - t
-            pygame.draw.circle(surf, (int(160*b), int(90*b), int(20*b)), (center, center), r)
+            pygame.draw.circle(surf, (int(80*b), int(40*b), int(8*b)), (center, center), r)
 
         self._grad_cache[key] = surf
         return surf
