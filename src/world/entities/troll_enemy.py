@@ -71,6 +71,8 @@ class TrollEnemy(Actor):
         end   = grid.node(tx, ty)
         if not end.walkable:
             tx, ty, end = self._nearest_walkable(grid, tx, ty, maze)
+        if not start.walkable:
+            sx, sy, start = self._nearest_walkable(grid, sx, sy, maze)
         if start.walkable and end.walkable:
             path, _ = self.finder.find_path(start, end, grid)
             return path

@@ -18,7 +18,7 @@ class EnemyAI(Actor):
         self.path = []
 
         # Instância do algoritmo A* sem movimento diagonal
-        self.finder = AStarFinder(diagonal_movement=DiagonalMovement.never)
+        self.finder = AStarFinder(diagonal_movement=DiagonalMovement.only_when_no_obstacle)
 
         # Temporizador que controla quando recalcular o caminho
         self.recalc_timer = 0.0
@@ -106,6 +106,9 @@ class EnemyAI(Actor):
         # Só calcula se origem e destino forem tiles caminháveis
         if not end.walkable:
             tx, ty, end = self._nearest_walkable(grid, tx, ty, maze)
+
+        if not start.walkable:
+            sx, sy, start = self._nearest_walkable(grid, sx, sy, maze)
 
         if start.walkable and end.walkable:
             path, _ = self.finder.find_path(start, end, grid)
@@ -198,7 +201,7 @@ class EnemyAI(Actor):
                 self.state = 'INVESTIGATE'
                 self.investigate_elapsed = 0.0
                 self.recalc_timer = 0
-
+            
         elif can_see_player:
             if self.state in ('WANDER', 'PATROL'):
                 # Primeira vez avistando o jogador: pausa em ALERT antes de perseguir
@@ -239,7 +242,9 @@ class EnemyAI(Actor):
             # Fallback: desiste após 6 s sem encontrar o jogador
             timed_out = self.investigate_elapsed > 6.0
 
-            if (close_enough and self.investigate_elapsed > 1.0) \
+            tempo_espera = 4.0 if close_enough else 1.5
+
+            if (close_enough and self.investigate_elapsed > tempo_espera) \
             or (path_consumed and self.investigate_elapsed > 2.0) \
             or timed_out:
                 self.state = 'PATROL'
@@ -301,7 +306,7 @@ class EnemyAI(Actor):
 
         elif self.state == 'INVESTIGATE' and self.path:
             # Investigando: usa a última posição conhecida como alvo final
-            override = self.last_known_pos if len(self.path) <= 1 else None
+            override = self.last_known_pos if (len(self.path) <= 1 and not player.is_hidden) else None
             self._move_along_path(dt, maze, override)
 
         else:
