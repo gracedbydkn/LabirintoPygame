@@ -139,6 +139,14 @@ class TrollEnemy(Actor):
             self.vy = (dy / dist) * self.speed
             return False
 
+    def hear_sound(self, sx, sy):
+        """Recebe um evento sonoro. Só reage se não estiver em CHASE."""
+        if self.state != 'CHASE':
+            self.state = 'INVESTIGATE'
+            self.last_known_pos = (sx, sy)
+            self.investigate_elapsed = 0.0
+            self.recalc_timer = 0
+
     # ------------------------------------------------------------------ #
     #  Animação — específica do Troll                                      #
     # ------------------------------------------------------------------ #

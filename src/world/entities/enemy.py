@@ -141,6 +141,8 @@ class EnemyAI(Actor):
         return self.x, self.y  # Fallback: fica no lugar
 
     def _move_along_path(self, dt, maze, override_target=None):
+
+
         """Avança o inimigo pelo caminho calculado, nó a nó.
         Retorna True quando o destino foi alcançado."""
         if not self.path:
@@ -177,6 +179,14 @@ class EnemyAI(Actor):
             self.vx = (dx / dist) * self.speed
             self.vy = (dy / dist) * self.speed
             return False
+
+    def hear_sound(self, sx, sy):
+        """Recebe um evento sonoro. Só reage se não estiver em CHASE."""
+        if self.state != 'CHASE':
+            self.state = 'INVESTIGATE'
+            self.last_known_pos = (sx, sy)
+            self.investigate_elapsed = 0.0
+            self.recalc_timer = 0
 
     def update(self, dt, player, maze):
         """Loop principal da IA: atualiza sensores, máquina de estados, rota e movimento."""
