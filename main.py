@@ -270,7 +270,7 @@ class Game:
             drawables.sort(key=lambda e: e.y)
             for e in drawables:
                 e.draw(self.screen, self.camera)
-                self.maze.draw_top(self.screen, self.camera)
+            self.maze.draw_top(self.screen, self.camera)
             
             for obj in self.world_objects:
                 r = obj.rect

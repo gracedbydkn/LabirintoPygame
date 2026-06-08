@@ -20,7 +20,7 @@ def carregar_tecla(nome, tamanho=(40, 40)):
 
 
 def carregar_teclas():
-    nomes = ["E", "W", "A", "S", "D", "ARROWUP", "ARROWLEFT", "ARROWDOWN", "ARROWRIGHT"]
+    nomes = ["E", "W", "A", "S", "D", "ARROWUP", "ARROWLEFT", "ARROWDOWN", "ARROWRIGHT", "SHIFTBIGGER"]
     return {n: carregar_tecla(n) for n in nomes}
 
 
@@ -84,6 +84,12 @@ def draw_key_hints(screen, player, world_objects, items, key_hints, camera, time
             if frames:
                 frame = frames[f]
                 screen.blit(frame, (x - frame.get_width() // 2, y - frame.get_height() // 2))
+
+        shift_frames = key_hints.get("SHIFTBIGGER")
+        if shift_frames:
+            shift_frame = shift_frames[f]
+            shift_x = cx - int(step * 2.5)
+            screen.blit(shift_frame, (shift_x - shift_frame.get_width() // 2, cy - shift_frame.get_height() // 2))
 
 
 # ---------------------------------------------------------------------------

@@ -104,6 +104,7 @@ class Player(Actor):
             # Se estiver escondido, não deve se mover mesmo que haja input, e a direção visual não deve mudar.
             self.vx = 0
             self.vy = 0
+            self.is_running = False
             return
         keys = pygame.key.get_pressed()
         vx, vy = 0.0, 0.0

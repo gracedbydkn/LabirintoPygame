@@ -7,6 +7,10 @@ class FogOfWar:
     def __init__(self):
         # Cache para superfícies de gradiente já geradas — evita recriar a cada frame
         self._grad_cache = {}
+        # Surfaces pré-alocadas — reutilizadas a cada frame
+        self._fog1 = None
+        self._fog2 = None
+        self._fog_size = (0, 0)
 
     def _get_gradient(self, radius):
         """Cria (ou recupera do cache) uma superfície circular com transparência gradual.
@@ -63,6 +67,11 @@ class FogOfWar:
         torch_r    = TORCH_FOV_RADIUS + TORCH_FOV_SOFT
         torch_grad = self._get_gradient(torch_r)
         torch_glow = self._get_torch_glow(torch_r)
+        if self._fog_size != (w, h):
+            self._fog1 = pygame.Surface((w, h), pygame.SRCALPHA)
+            self._fog2 = pygame.Surface((w, h), pygame.SRCALPHA)
+            self._fog_size = (w, h)
+
         for tx, ty in tochas:
             tcx = int(tx - camera.x)
             tcy = int(ty - camera.y)
@@ -72,19 +81,17 @@ class FogOfWar:
             surface.blit(torch_glow, torch_glow.get_rect(center=(tcx, tcy)), special_flags=pygame.BLEND_ADD)
 
         # Máscara 1: preto (para o inimigo não aparecer)
-        fog1 = pygame.Surface((w, h), pygame.SRCALPHA)
-        fog1.fill((0, 0, 0, 255))
-        fog1.blit(grad, grad.get_rect(center=(int(cx), int(cy))), special_flags=pygame.BLEND_RGBA_SUB)
+        self._fog1.fill((0, 0, 0, 255))
+        self._fog1.blit(grad, grad.get_rect(center=(int(cx), int(cy))), special_flags=pygame.BLEND_RGBA_SUB)
         for tx, ty in tochas:
-            fog1.blit(torch_grad, torch_grad.get_rect(center=(int(tx - camera.x), int(ty - camera.y))), special_flags=pygame.BLEND_RGBA_SUB)
-        surface.blit(fog1, (0, 0))
+            self._fog1.blit(torch_grad, torch_grad.get_rect(center=(int(tx - camera.x), int(ty - camera.y))), special_flags=pygame.BLEND_RGBA_SUB)
+        surface.blit(self._fog1, (0, 0))
 
         # Máscara 2: a luz
         flicker = int(3 * math.sin(time * 7.3) + 2 * math.sin(time * 13.1))
         base_alpha = max(0, min(255, 240 + flicker))
-        fog2 = pygame.Surface((w, h), pygame.SRCALPHA)
-        fog2.fill((0, 0, 0, base_alpha))
-        fog2.blit(grad, grad.get_rect(center=(int(cx), int(cy))), special_flags=pygame.BLEND_RGBA_SUB)
+        self._fog2.fill((0, 0, 0, base_alpha))
+        self._fog2.blit(grad, grad.get_rect(center=(int(cx), int(cy))), special_flags=pygame.BLEND_RGBA_SUB)
         for tx, ty in tochas: 
-            fog2.blit(torch_grad, torch_grad.get_rect(center=(int(tx - camera.x), int(ty - camera.y))), special_flags=pygame.BLEND_RGBA_SUB)
-        surface.blit(fog2, (0, 0))
+            self._fog2.blit(torch_grad, torch_grad.get_rect(center=(int(tx - camera.x), int(ty - camera.y))), special_flags=pygame.BLEND_RGBA_SUB)
+        surface.blit(self._fog2, (0, 0))
