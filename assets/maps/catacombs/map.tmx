@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="67" height="67" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="57">
+<map version="1.10" tiledversion="1.12.1" orientation="orthogonal" renderorder="right-down" width="67" height="67" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="59">
  <tileset firstgid="1" name="spritefusion" tilewidth="16" tileheight="16" tilecount="152" columns="8">
   <image source="spritesheet.png" width="128" height="304"/>
  </tileset>
@@ -228,7 +228,7 @@
 </data>
  </layer>
  <objectgroup id="4" name="Camada de Objetos">
-  <object id="5" name="start" x="139.751" y="137.402"/>
+  <object id="5" name="start" x="144.751" y="137.402"/>
   <object id="6" name="barreira_roxa" type="barreira" x="600.531" y="344.833">
    <properties>
     <property name="runa" value="runa_roxa"/>
@@ -250,7 +250,7 @@
     <property name="loot" value=""/>
    </properties>
   </object>
-  <object id="22" name="vaso" type="vaso" x="656.136" y="848.602">
+  <object id="22" name="vaso" type="vaso" x="654.681" y="850.602">
    <properties>
     <property name="loot" value=""/>
    </properties>
@@ -270,7 +270,7 @@
     <property name="loot" value=""/>
    </properties>
   </object>
-  <object id="27" name="vaso" type="vaso" x="721.455" y="999.273">
+  <object id="27" name="vaso" type="vaso" x="703.455" y="999.273">
    <properties>
     <property name="loot" value=""/>
    </properties>
@@ -300,7 +300,7 @@
     <property name="loot" value=""/>
    </properties>
   </object>
-  <object id="33" name="barril" type="esconderijo" x="605.667" y="998"/>
+  <object id="33" name="barril" type="esconderijo" x="616.667" y="998"/>
   <object id="34" name="vaso" type="vaso" x="61" y="101">
    <properties>
     <property name="loot" value=""/>
@@ -392,5 +392,6 @@
     <property name="loot" value=""/>
    </properties>
   </object>
+  <object id="57" name="barril" type="esconderijo" x="991" y="697.758"/>
  </objectgroup>
 </map>

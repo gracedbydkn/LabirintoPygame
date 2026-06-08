@@ -85,8 +85,9 @@ class Game:
         self.hud_assets = carregar_assets_hud()
         self.audio = AudioManager(sfx_volume=0.8, ambient_volume=0.4)
         self.audio.load_sfx("vaso_quebrar", "assets/audio/sfx/soundvaso.mp3")
-        # self.audio.load_ambient("assets/audio/ambient/dungeon_ambient.ogg")
-        # self.audio.play_ambient()
+        self.audio.load_sfx("barril_entrar", "assets/audio/sfx/soundbarril.mp3")
+        self.audio.load_ambient("assets/audio/dungeon_ambient.mp3")
+        self.audio.play_ambient(-1) 
         self.reset()
 
 
@@ -135,7 +136,6 @@ class Game:
         self.env_objects = []
 
         for data in self.maze.env_object_data:
-            print(f"objeto: name={data['name']}, type={data['type']}")
             if data["type"] == "vaso":
                 frames   = self.env_frames.get("vaso")
                 frames_h = self.env_frames.get("vaso_highlight")
@@ -176,9 +176,8 @@ class Game:
                 frames_h = self.env_frames.get("barril_highlight")
                 if frames and frames_a and frames_p and frames_h:
                     self.world_objects.append(
-                        Esconderijo(data["x"], data["y"], frames, frames_a, frames_p, frames_h)
+                        Esconderijo(data["x"], data["y"], frames, frames_a, frames_p, frames_h, on_hide=lambda:self.audio.play_sfx("barril_entrar"))
                     )
-        print(f"world_objects: {[type(o).__name__ for o in self.world_objects]}")
 
     def draw_key_hints(self):
         _draw_key_hints(self.screen, self.player, self.world_objects, self.items, self.key_hints, self.camera, self.time)
@@ -209,24 +208,20 @@ class Game:
         self.audio.play_sfx("vaso_quebrar")
         """Notifica o inimigo mais próximo do som, dentro do raio de audição."""
         raio_px = SOUND_RADIUS_TILES * self.maze.tile_size
-        print(f"[SOUND EVENT] Vaso quebrado em ({x:.0f}, {y:.0f}) | Raio: {raio_px}px ({SOUND_RADIUS_TILES} tiles)")
 
         inimigos = [self.enemy, self.troll]
         candidatos = []
 
         for inimigo in inimigos:    
             dist = ((inimigo.x - x)**2 + (inimigo.y - y)**2) ** 0.5
-            print(f"[SOUND EVENT] {type(inimigo).__name__} está a {dist:.0f}px do som")
             if dist <= raio_px:
                 candidatos.append((dist, inimigo))
 
         if candidatos:
             candidatos.sort(key=lambda t: t[0])
             escolhido = candidatos[0][1]
-            print(f"[SOUND EVENT] {type(escolhido).__name__} foi atraído pelo som!")
             escolhido.hear_sound(x, y)
-        else:
-            print(f"[SOUND EVENT] Nenhum inimigo dentro do raio.")
+
 
     def run(self):
         while True:
@@ -258,7 +253,6 @@ class Game:
                 self.player.update(dt, self.maze.wall_rects + self.maze.object_rects)
                 self.enemy.update(dt, self.player, self.maze)
                 self.troll.update(dt, self.player, self.maze)
-                print(f"[STATE] Zumbi: {self.enemy.state} | Troll: {self.troll.state}")
 
                 for obj in self.env_objects:
                     obj.update(dt)
@@ -304,10 +298,6 @@ class Game:
                 e.draw(self.screen, self.camera)
             self.maze.draw_top(self.screen, self.camera)
             
-            for obj in self.world_objects:
-                r = obj.rect
-                pygame.draw.rect(self.screen, (255, 0, 0),
-                    pygame.Rect(r.x - self.camera.x, r.y - self.camera.y, r.w, r.h), 2)
 
             if not self.won:
                 tochas = [(obj.x, obj.y) for obj in self.env_objects]

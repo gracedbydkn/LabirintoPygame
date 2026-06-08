@@ -137,9 +137,9 @@ def draw_hud(screen, clock, player, font_sm, env_frames, hud_assets, camera):
         pygame.draw.rect(screen, (0, 0, 0), (px, py, bar_w, bar_h), 1)
 
     # FPS abaixo da barra
-    fps = int(clock.get_fps())
-    cor = (100, 220, 100) if fps >= 55 else (255, 200, 0) if fps >= 30 else (255, 80, 80)
-    screen.blit(font_sm.render(f"FPS: {fps}", True, cor), (margin, margin))
+    #fps = int(clock.get_fps())
+    #cor = (100, 220, 100) if fps >= 55 else (255, 200, 0) if fps >= 30 else (255, 80, 80)
+    #screen.blit(font_sm.render(f"FPS: {fps}", True, cor), (margin, margin))
 
     # ── Inventário com portrait_frame ────────────────────────────────────────
     inventario = player.inventory.listar()
@@ -149,9 +149,9 @@ def draw_hud(screen, clock, player, font_sm, env_frames, hud_assets, camera):
     portrait_img = hud_assets.get("portrait_frame")
 
     # asset original: 48x72 — escala 2×
-    SLOT_SCALE = 2
-    SLOT_SW    = 48 * SLOT_SCALE   # 96
-    SLOT_SH    = 72 * SLOT_SCALE   # 144
+    SLOT_SCALE = 1.3
+    SLOT_SW    = 64 * SLOT_SCALE   # 96
+    SLOT_SH    = 64 * SLOT_SCALE   # 144
     SLOT_PAD   = 8
     ICON_SIZE  = int(SLOT_SW * 0.50)
 
@@ -164,7 +164,7 @@ def draw_hud(screen, clock, player, font_sm, env_frames, hud_assets, camera):
 
         # Fundo escuro
         bg = pygame.Surface((SLOT_SW, SLOT_SH), pygame.SRCALPHA)
-        bg.fill((15, 10, 20, 210))
+        bg.fill((0, 0, 0, 180))
         screen.blit(bg, (sx, sy))
 
         # Ícone centralizado
@@ -186,5 +186,5 @@ def draw_hud(screen, clock, player, font_sm, env_frames, hud_assets, camera):
 
         # Label abaixo
         nome  = "Chave" if item.item_type == "chave" else "Runa"
-        label = font_sm.render(nome, True, (220, 200, 150))
+        label = font_sm.render(nome, True, (255, 255, 255))
         screen.blit(label, (sx + (SLOT_SW - label.get_width()) // 2, sy + SLOT_SH + 2))

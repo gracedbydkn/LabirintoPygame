@@ -24,21 +24,17 @@ class AudioManager:
     def load_sfx(self, name, filepath):
         """Carrega um efeito sonoro e armazena pelo nome."""
         if not os.path.exists(filepath):
-            print(f"[AUDIO] Arquivo não encontrado: {filepath}")
             return
         sound = pygame.mixer.Sound(filepath)
         sound.set_volume(self.sfx_volume)
         self._sfx[name] = sound
-        print(f"[AUDIO] SFX carregado: {name} ({filepath})")
 
     def load_ambient(self, filepath):
         """Carrega o som ambiente diretamente no mixer (stream)."""
         if not os.path.exists(filepath):
-            print(f"[AUDIO] Arquivo não encontrado: {filepath}")
             return
         pygame.mixer.music.load(filepath)
         pygame.mixer.music.set_volume(self.ambient_volume)
-        print(f"[AUDIO] Ambiente carregado: {filepath}")
 
     # ------------------------------------------------------------------ #
     #  Reprodução                                                          #
@@ -49,8 +45,7 @@ class AudioManager:
         sound = self._sfx.get(name)
         if sound:
             sound.play()
-        else:
-            print(f"[AUDIO] SFX não encontrado: {name}")
+
 
     def play_ambient(self, loops=-1):
         """Inicia o som ambiente em loop. loops=-1 = infinito."""

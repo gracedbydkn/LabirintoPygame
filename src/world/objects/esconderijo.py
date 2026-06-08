@@ -4,7 +4,7 @@ from src.world.entities.world_object import WorldObject
 from src.world.entities.interactable import Interactable
 
 class Esconderijo(WorldObject):
-    def __init__(self, x, y, frames, frames_highlight, frames_player, frames_aberto):
+    def __init__(self, x, y, frames, frames_highlight, frames_player, frames_aberto, on_hide=None):
         super().__init__(x, y, frames)
         colisao_w = 40
         colisao_h = 40
@@ -18,6 +18,7 @@ class Esconderijo(WorldObject):
         self.frames_highlight = frames_highlight
         self.frames_player   = frames_player  # sprite com jogador dentro
         self.ocupado = False
+        self.on_hide = on_hide
         self.interactable = Interactable(
             on_interact=self._alternar,
             prompt="Esconder"
@@ -38,6 +39,8 @@ class Esconderijo(WorldObject):
         surface.blit(frame, (sx - fw // 2, sy - fh))
 
     def _alternar(self, jogador):
+        if self.on_hide:
+                self.on_hide()
         if jogador.is_hidden:
             jogador.is_hidden = False
             jogador.esconderijo_atual = None
@@ -48,3 +51,4 @@ class Esconderijo(WorldObject):
             jogador.esconderijo_atual = self
             self.ocupado = True
             self.interactable.prompt = "Sair"
+            
