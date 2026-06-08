@@ -207,7 +207,7 @@ class EnemyAI(Actor):
                 # Primeira vez avistando o jogador: pausa em ALERT antes de perseguir
                 self.state = 'ALERT'
                 self.last_known_pos = (player.x, player.y)
-                self.alert_timer = random.uniform(0.6, 1.2)  # Reação entre 0.6s e 1.2s
+                self.alert_timer = random.uniform(0.8, 1.5)  # Reação entre os 2
                 self.recalc_timer = 0
 
             elif self.state == 'ALERT':
@@ -240,9 +240,9 @@ class EnemyAI(Actor):
             # Limiar que cobre tiles bloqueados por objetos
             close_enough = d < maze.tile_size * 1.2
             # Fallback: desiste após 6 s sem encontrar o jogador
-            timed_out = self.investigate_elapsed > 6.0
+            timed_out = self.investigate_elapsed > 4.0
 
-            tempo_espera = 3.0 if close_enough else 1.5
+            tempo_espera = 2.0 if close_enough else 1.0
 
             if (close_enough and self.investigate_elapsed > tempo_espera) \
             or (path_consumed and self.investigate_elapsed > 2.0) \
@@ -260,7 +260,7 @@ class EnemyAI(Actor):
             if self.state == 'CHASE':
                 self.path = self.get_path(player.x, player.y, maze, extra_blocked)
                 self.recalc_timer = 0.25   # Recalcula frequentemente para seguir o jogador
-                self.speed = 250           # Velocidade máxima
+                self.speed = 240           # Velocidade máxima
 
             elif self.state == 'ALERT':
                 # Fica parado — só vira na direção do jogador (tratado na seção de movimento)
@@ -271,7 +271,7 @@ class EnemyAI(Actor):
                 if self.last_known_pos:
                     self.path = self.get_path(self.last_known_pos[0], self.last_known_pos[1], maze, extra_blocked)
                     self.recalc_timer = 1.0
-                    self.speed = 190
+                    self.speed = 180
 
             elif self.state == 'PATROL':
                 # Anda aleatoriamente em torno da área onde viu o jogador
@@ -279,14 +279,14 @@ class EnemyAI(Actor):
                 oy = self.y + random.randint(-maze.tile_size * 5, maze.tile_size * 5)
                 self.path = self.get_path(ox, oy, maze, extra_blocked)
                 self.recalc_timer = 2.5
-                self.speed = 150
+                self.speed = 140
 
             elif self.state == 'WANDER':
                 # Vagueia aleatoriamente pelo mapa em velocidade baixa
                 wx, wy = self._random_walkable_pos(maze)
                 self.path = self.get_path(wx, wy, maze, extra_blocked)
                 self.recalc_timer = 4.0
-                self.speed = 90
+                self.speed = 80
 
         # --- Execução de Movimento ---
         if self.state == 'ALERT':
